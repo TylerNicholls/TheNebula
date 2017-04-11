@@ -3,7 +3,7 @@ Written in rust.
 
 ## things of import:
 it has some circles.
-they move
+they move.
 
-#this is a heading?
+# this is a heading?
 more words

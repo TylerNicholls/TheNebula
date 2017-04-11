@@ -8,6 +8,8 @@ use piston::event_loop::*;
 use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
+use std::f64;
+//use std::num::Int;
 
 const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
 const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
@@ -17,6 +19,7 @@ const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 //struct containting information of the Player
 pub struct Player {
     gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
     x_pos: f64,
     y_pos: f64,
     x_vel: f64,
@@ -26,6 +29,7 @@ pub struct Player {
 
 pub struct Enemy {
     gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
     x_pos: f64,
     y_pos: f64,
     x_vel: f64,
@@ -36,8 +40,8 @@ pub struct Enemy {
 impl Player {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
-
-        let shape1 = rectangle::square(0.0, 0.0, 100.0);
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
 
@@ -49,7 +53,7 @@ impl Player {
             clear(GREY, gl);
 
             let transform = c.transform.trans(x, y) //move reference to center of square
-                                       .trans(-50.0, -50.0)
+                                       .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
             // Draw a box rotating around the middle of the screen.
@@ -78,10 +82,10 @@ impl Player {
             self.right_d = false;
         }
         //boundaries
-        if (self.x_pos <= (-300.0+50.0)) || (self.x_pos >= (300.0-50.0)) {
+        if (self.x_pos <= (-300.0+self.radius)) || (self.x_pos >= (300.0-self.radius)) {
             self.x_vel = -(self.x_vel);
         }
-        if (self.y_pos <= (-300.0+50.0)) || (self.y_pos >= (300.0-50.0)) {
+        if (self.y_pos <= (-300.0+self.radius)) || (self.y_pos >= (300.0-self.radius)) {
             self.y_vel = -(self.y_vel);
         }
         self.x_pos += self.x_vel * args.dt;
@@ -102,7 +106,8 @@ impl Enemy {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
-        let shape1 = rectangle::square(0.0, 0.0, 75.0);
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
 
@@ -114,7 +119,7 @@ impl Enemy {
             //clear(GREY, gl);
 
             let transform = c.transform.trans(x, y) //move reference to center of square
-                                       .trans(-50.0, -50.0)
+                                       .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
             // Draw a box rotating around the middle of the screen.
@@ -126,10 +131,10 @@ impl Enemy {
         let vel_bump: f64  = 20.0;
 
         //boundaries
-        if (self.x_pos <= (-300.0+50.0)) || (self.x_pos >= (300.0-50.0)) {
+        if (self.x_pos <= (-300.0+self.radius)) || (self.x_pos >= (300.0-self.radius)) {
             self.x_vel = -(self.x_vel);
         }
-        if (self.y_pos <= (-300.0+50.0)) || (self.y_pos >= (300.0-50.0)) {
+        if (self.y_pos <= (-300.0+self.radius)) || (self.y_pos >= (300.0-self.radius)) {
             self.y_vel = -(self.y_vel);
         }
         self.x_pos += self.x_vel * args.dt;
@@ -140,6 +145,7 @@ impl Enemy {
         self.x_vel += -( (self.x_vel) * drag ) * args.dt ;
         self.y_vel += -( (self.y_vel) * drag ) * args.dt ;
         //println!("x_vel: {:.2}, y_vel: {:.2}",self.x_vel,self.y_vel);
+
     }
 }
 
@@ -163,6 +169,7 @@ fn main() {
     // Create a new game and run it.
  let mut player = Player {
      gl: GlGraphics::new(opengl),
+     radius: 50.0,
      x_pos: 0.0,
      y_pos: 0.0,
      x_vel: 0.0,
@@ -175,12 +182,14 @@ fn main() {
 
  let mut enemy = Enemy {
      gl: GlGraphics::new(opengl),
+     radius: 37.5,
      x_pos: 0.0,
      y_pos: 0.0,
      x_vel: 0.0,
      y_vel: 0.0,
  };
 
+//collision(player, enemy);
 
 //the event loop
  let mut events = Events::new(EventSettings::new());
@@ -193,6 +202,11 @@ fn main() {
         if let Some(u) = e.update_args() {
             player.update(&u);
             enemy.update(&u);
+            let mut returner: bool = collision(&mut player, &mut enemy);
+            if collision(&mut player, &mut enemy) {
+                println!("collide");
+            }
+            //collision(&mut player, &mut enemy);
         }
 
         if let Some(button) = e.press_args() {
@@ -215,14 +229,20 @@ fn main() {
                 //println!("Right button pressed");
                 player.right_d = true;
             }
+
         }
-    }
+    }   //end while
 
 }   //end main
 
 
-fn collision(the_player: Player, the_enemy: Enemy) -> bool {
-    println!("collsion!");
-    true
-
+fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
+//fn collision(the_player: &mut Player, the_enemy: &mut Enemy) {
+    let mut retval: bool = false;
+    let centDist: f64 = ((the_player.x_pos-the_enemy.x_pos).pow(2) + (the_player.y_pos-the_enemy.y_pos) * (the_player.y_pos-the_enemy.y_pos)).sqrt();
+    if centDist <= the_enemy.radius + the_player.radius {
+        //println!("collision!");
+        retval = true;
+    }
+    retval
 }

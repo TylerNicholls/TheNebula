@@ -124,24 +124,7 @@ impl Enemy {
     }
     fn update(&mut self, args: &UpdateArgs) {
         let vel_bump: f64  = 20.0;
-        // if self.up_d {
-        //     self.y_vel += -vel_bump;
-        //     self.up_d = false;
-        //
-        // }
-        // if self.down_d {
-        //     self.y_vel += vel_bump;
-        //     self.down_d = false;
-        //
-        // }
-        // if self.left_d {
-        //     self.x_vel += -vel_bump;
-        //     self.left_d = false;
-        // }
-        // if self.right_d {
-        //     self.x_vel += vel_bump;
-        //     self.right_d = false;
-        // }
+
         //boundaries
         if (self.x_pos <= (-300.0+50.0)) || (self.x_pos >= (300.0-50.0)) {
             self.x_vel = -(self.x_vel);
@@ -236,3 +219,10 @@ fn main() {
     }
 
 }   //end main
+
+
+fn collision(the_player: Player, the_enemy: Enemy) -> bool {
+    println!("collsion!");
+    true
+
+}

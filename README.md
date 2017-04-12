@@ -1,16 +1,14 @@
-Tim and Tyler and Michael's game, the nebula.
+# The Nebula
+### A TMT Joint
+* Tyler Nicholls
+* Michael Spanolo
+* Tim Wilson
+
 Written in rust.
 
 ## things of import:
 it has some circles.
 they move.
-
-# this is a heading?
-more words
-
-### Smaller?
-* is this smaller?
-* another asterisk
 
 
 ### Tyler's Notes:

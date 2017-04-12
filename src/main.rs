@@ -239,7 +239,7 @@ fn main() {
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
 //fn collision(the_player: &mut Player, the_enemy: &mut Enemy) {
     let mut retval: bool = false;
-    let centDist: f64 = ((the_player.x_pos-the_enemy.x_pos).pow(2) + (the_player.y_pos-the_enemy.y_pos) * (the_player.y_pos-the_enemy.y_pos)).sqrt();
+    let centDist: f64 = ((the_player.x_pos-the_enemy.x_pos) * (the_player.x_pos-the_enemy.x_pos) + (the_player.y_pos-the_enemy.y_pos) * (the_player.y_pos-the_enemy.y_pos)).sqrt();
     if centDist <= the_enemy.radius + the_player.radius {
         //println!("collision!");
         retval = true;

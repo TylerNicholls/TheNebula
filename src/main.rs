@@ -16,10 +16,16 @@ const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
+const WINDOW_X: i32 = 600;
+const WINDOW_Y: i32 = 600;
+
+const PI :f64 = std::f64::consts::PI;
+
 //struct containting information of the Player
 pub struct Player {
     gl: GlGraphics, // OpenGL drawing backend.
     radius: f64,
+    mass: f64,
     x_pos: f64,
     y_pos: f64,
     x_vel: f64,
@@ -30,6 +36,7 @@ pub struct Player {
 pub struct Enemy {
     gl: GlGraphics, // OpenGL drawing backend.
     radius: f64,
+    mass: f64,
     x_pos: f64,
     y_pos: f64,
     x_vel: f64,
@@ -91,7 +98,7 @@ impl Player {
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
         let drag: f64 = 0.250;  //simple drag
-        let mass: f64 = 1.0;    //mass
+        //let mass: f64 = 1.0;    //mass
 
         self.x_vel += -( (self.x_vel) * drag ) * args.dt ;
         self.y_vel += -( (self.y_vel) * drag ) * args.dt ;
@@ -111,8 +118,8 @@ impl Enemy {
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
 
-        let (x, y) = ((300.0 / 1.5) as f64,
-                      (300.0 / 1.5) as f64);
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
 
         self.gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
@@ -128,7 +135,7 @@ impl Enemy {
         });
     }
     fn update(&mut self, args: &UpdateArgs) {
-        let vel_bump: f64  = 20.0;
+        //let vel_bump: f64  = 20.0;
 
         //boundaries
         if (self.x_pos <= (-300.0+self.radius)) || (self.x_pos >= (300.0-self.radius)) {
@@ -140,7 +147,7 @@ impl Enemy {
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
         let drag: f64 = 0.250;  //simple drag
-        let mass: f64 = 1.0;    //mass
+        //let mass: f64 = 1.0;    //mass
 
         self.x_vel += -( (self.x_vel) * drag ) * args.dt ;
         self.y_vel += -( (self.y_vel) * drag ) * args.dt ;
@@ -170,6 +177,7 @@ fn main() {
  let mut player = Player {
      gl: GlGraphics::new(opengl),
      radius: 50.0,
+     mass: 1.0,
      x_pos: 0.0,
      y_pos: 0.0,
      x_vel: 0.0,
@@ -183,8 +191,9 @@ fn main() {
  let mut enemy = Enemy {
      gl: GlGraphics::new(opengl),
      radius: 37.5,
-     x_pos: 0.0,
-     y_pos: 0.0,
+     mass: 1.0,
+     x_pos: 90.0,
+     y_pos: 90.0,
      x_vel: 0.0,
      y_vel: 0.0,
  };
@@ -202,8 +211,9 @@ fn main() {
         if let Some(u) = e.update_args() {
             player.update(&u);
             enemy.update(&u);
-            let mut returner: bool = collision(&mut player, &mut enemy);
+            //let returner: bool = collision(&mut player, &mut enemy);
             if collision(&mut player, &mut enemy) {
+                rebound(&mut player, &mut enemy);
                 println!("collide");
             }
             //collision(&mut player, &mut enemy);
@@ -237,12 +247,34 @@ fn main() {
 
 
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
-//fn collision(the_player: &mut Player, the_enemy: &mut Enemy) {
     let mut retval: bool = false;
-    let centDist: f64 = ((the_player.x_pos-the_enemy.x_pos) * (the_player.x_pos-the_enemy.x_pos) + (the_player.y_pos-the_enemy.y_pos) * (the_player.y_pos-the_enemy.y_pos)).sqrt();
-    if centDist <= the_enemy.radius + the_player.radius {
+    println!("the_player.x_pos: {:.2}, the_enemy.y_pos: {:.2}",the_player.x_pos, the_enemy.x_pos);
+    let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
+    println!("centDist: {:.2}",cent_dist);
+    if cent_dist <= (the_enemy.radius + the_player.radius) {
         //println!("collision!");
         retval = true;
     }
     retval
+}
+
+fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
+
+        let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);
+        let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);
+        let phi:f64 = (the_enemy.y_pos - the_player.y_pos).atan2(the_enemy.x_pos - the_enemy.x_pos);
+        let enemy_net_vel: f64 = ( the_enemy.x_vel.powi(2) + the_enemy.y_vel.powi(2) ).sqrt();
+        let player_net_vel: f64 = ( the_player.x_vel.powi(2) + the_player.y_vel.powi(2) ).sqrt();
+
+        //let pi:f64 = const std::f64::consts::PI
+
+
+        //the_enemy.x_vel  = (enemy_net_vel*( (player_theta - enemy_theta)/(the_player.mass - the_enemy.mass) ).cos() + 2.0*the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).cos())/(the_player.mass + the_enemy.mass) + player_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).cos();
+        //the_enemy.y_vel  = (enemy_net_vel*( (player_theta - enemy_theta)/(the_player.mass - the_enemy.mass) ).cos() + 2.0*the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).sin();
+
+        //the_player.x_vel = (player_net_vel*( (player_theta - enemy_theta)/(the_enemy.mass - the_player.mass) ).cos() + 2.0*the_enemy.mass*player_net_vel*(enemy_theta - phi).cos()*(phi).cos())/(the_player.mass + the_enemy.mass) + enemy_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).sin();
+        //the_player.y_vel = (player_net_vel*( (player_theta - enemy_theta)/(the_enemy.mass - the_player.mass) ).cos() + 2.0*the_enemy.mass*player_net_vel*(enemy_theta - phi).cos()*(phi).sin())/(the_player.mass + the_enemy.mass) + enemy_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).sin();
+
+        the_enemy.x_vel  = -the_player.x_vel;
+        the_enemy.y_vel  = -the_player.y_vel;
 }

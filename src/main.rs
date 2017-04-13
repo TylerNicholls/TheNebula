@@ -53,6 +53,7 @@ pub struct Enemy {
     y_vel: f64,
     health: f64,
     theta: f64,
+    bullet_theta: f64,
     damage_rate: f64
 }
 
@@ -166,6 +167,9 @@ impl Enemy {
     fn update(&mut self, args: &UpdateArgs) {
         //let vel_bump: f64  = 20.0;
 
+        //update theta
+        self.theta = self.theta + args.dt*PI/8.0;
+
         //boundaries
         if self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius) {
             self.x_vel = -(self.x_vel);
@@ -244,12 +248,6 @@ impl Nebula {
                  ellipse(RED, shape1, transform, gl);
           });
         }
-        fn update(&mut self, args: &UpdateArgs) {
-            self.x_pos += self.x_vel * args.dt;
-            self.y_pos += self.y_vel * args.dt;
-            //boundaries
-        }
-
     }
 
 
@@ -303,7 +301,8 @@ fn main() {
      x_vel: 0.0,
      y_vel: 0.0,
      health: 100.0,
-     theta: 0,
+     theta: 0.0,
+     bullet_theta: 0.0,
      damage_rate: 0.0
  };
 
@@ -360,7 +359,6 @@ fn main() {
             }
             damage_enemy(&mut enemy, &mut nebula);
             if bullet.exists {
-                bullet.update(&u);
                 update_bullet(&mut bullet, &mut enemy);
             }
 
@@ -400,23 +398,34 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
         //self.x_vel = -(self.x_vel);
         the_bullet.x_pos = the_enemy.x_pos;
         the_bullet.y_pos = the_enemy.y_pos;
+        the_enemy.bullet_theta = the_enemy.theta;
     } else if the_bullet.x_pos >= (((WINDOW_X/2) as f64)-the_bullet.radius) {
         //self.x_vel = -(self.x_vel);
         the_bullet.x_pos = the_enemy.x_pos;
         the_bullet.y_pos = the_enemy.y_pos;
+        the_enemy.bullet_theta = the_enemy.theta;
     }
     if the_bullet.y_pos <= (-((WINDOW_Y/2) as f64)+the_bullet.radius) {
-        the_bullet.y_vel = -(the_bullet.y_vel);
+        //the_bullet.y_vel = -(the_bullet.y_vel);
         the_bullet.y_pos = the_enemy.y_pos;
         the_bullet.x_pos = the_enemy.x_pos;
+        the_enemy.bullet_theta = the_enemy.theta;
     } else if the_bullet.y_pos >= (((WINDOW_Y/2) as f64)-the_bullet.radius) {
-        the_bullet.y_vel = -(the_bullet.y_vel);
+        //the_bullet.y_vel = -(the_bullet.y_vel);
         the_bullet.y_pos = the_enemy.y_pos;
         the_bullet.x_pos = the_enemy.x_pos;
-
+        the_enemy.bullet_theta = the_enemy.theta;
     }
+        let bullet_speed:f64 = 5.0;
+        the_bullet.x_vel = bullet_speed * the_enemy.bullet_theta.cos();
+        the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
+        the_bullet.x_pos += the_bullet.x_vel;
+        the_bullet.y_pos += the_bullet.y_vel;
+
 }
 
+
+//boundaries
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;
     let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();

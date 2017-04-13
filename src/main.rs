@@ -10,7 +10,7 @@ use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use std::f64;
-use rand::Rng;
+//use rand::Rng;
 use rand::distributions::{IndependentSample, Range};
 //use std::num::Int;
 
@@ -19,7 +19,8 @@ const RED:   [f32; 4] = [0.750, 0.0, 0.0, 0.20];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
-const WINDOW_X: i32 = 600;
+//Window Size
+const WINDOW_X: i32 = 800;
 const WINDOW_Y: i32 = 600;
 
 const PI :f64 = std::f64::consts::PI;
@@ -99,15 +100,25 @@ impl Player {
             self.right_d = false;
         }
         //boundaries
-        if (self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius)) || (self.x_pos >= (((WINDOW_X/2) as f64)-self.radius)) {
+        if self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius) {
             self.x_vel = -(self.x_vel);
+            self.x_pos = -((WINDOW_X/2) as f64)+self.radius;
+        } else if self.x_pos >= (((WINDOW_X/2) as f64)-self.radius) {
+            self.x_vel = -(self.x_vel);
+            self.x_pos = ((WINDOW_X/2) as f64)-self.radius;
         }
-        if (self.y_pos <= (-((WINDOW_Y/2) as f64)+self.radius)) || (self.y_pos >= (((WINDOW_Y/2) as f64)-self.radius)) {
+        if self.y_pos <= (-((WINDOW_Y/2) as f64)+self.radius) {
             self.y_vel = -(self.y_vel);
+            self.y_pos = -((WINDOW_Y/2) as f64)+self.radius;
+        } else if self.y_pos >= (((WINDOW_Y/2) as f64)-self.radius) {
+            self.y_vel = -(self.y_vel);
+            self.y_pos =((WINDOW_Y/2) as f64)-self.radius;
         }
+
+        //Movement
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
-
+        //Drag
         self.x_vel += -( (self.x_vel) * DRAG ) * args.dt ;
         self.y_vel += -( (self.y_vel) * DRAG ) * args.dt ;
 
@@ -140,15 +151,25 @@ impl Enemy {
         //let vel_bump: f64  = 20.0;
 
         //boundaries
-        if (self.x_pos <= (-(WINDOW_X as f64)/2.0+self.radius)) || (self.x_pos >= ((WINDOW_X as f64)/2.0-self.radius)) {
+        if self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius) {
             self.x_vel = -(self.x_vel);
+            self.x_pos = -((WINDOW_X/2) as f64)+self.radius;
+        } else if self.x_pos >= (((WINDOW_X/2) as f64)-self.radius) {
+            self.x_vel = -(self.x_vel);
+            self.x_pos = ((WINDOW_X/2) as f64)-self.radius;
         }
-        if (self.y_pos <= (-(WINDOW_Y as f64)/2.0+self.radius)) || (self.y_pos >= ((WINDOW_Y as f64)/2.0-self.radius)) {
+        if self.y_pos <= (-((WINDOW_Y/2) as f64)+self.radius) {
             self.y_vel = -(self.y_vel);
+            self.y_pos = -((WINDOW_Y/2) as f64)+self.radius;
+        } else if self.y_pos >= (((WINDOW_Y/2) as f64)-self.radius) {
+            self.y_vel = -(self.y_vel);
+            self.y_pos =((WINDOW_Y/2) as f64)-self.radius;
         }
+
+        //Movement
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
-
+        //Drag
         self.x_vel += -( (self.x_vel) * DRAG ) * args.dt ;
         self.y_vel += -( (self.y_vel) * DRAG ) * args.dt ;
 
@@ -194,7 +215,7 @@ fn main() {
 
     let mut window: Window = WindowSettings::new(
         "The Nebula!!",
-        [600, 600]
+        [(WINDOW_X as u32), (WINDOW_Y as u32)]
     )
     .opengl(opengl)
     .exit_on_esc(true)
@@ -318,9 +339,9 @@ fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
     let damage_factor: f64 = 2.0;
     let cent_dist: f64 = ((the_nebula.x_pos-the_enemy.x_pos).powi(2) + (the_nebula.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     if cent_dist <= (the_enemy.radius + the_nebula.radius)  {
-        if (cent_dist + the_enemy.radius) <= the_nebula.radius {
+        if (cent_dist + the_enemy.radius) <= the_nebula.radius {    //completely in the nebula
             the_enemy.damage_rate = damage_factor;
-        } else {
+        } else {        //partially in the nebula
             let first_part: f64  = the_enemy.radius.powi(2)  * ( (cent_dist.powi(2)+ the_enemy.radius.powi(2)  - the_nebula.radius.powi(2)) / (2.0*cent_dist*the_enemy.radius)).acos();
             let second_part: f64 = the_nebula.radius.powi(2) * ( (cent_dist.powi(2)+ the_nebula.radius.powi(2) - the_enemy.radius.powi(2)) / (2.0*cent_dist*the_nebula.radius)).acos();
             let third_part: f64  = -0.5* ( (-cent_dist + the_enemy.radius + the_nebula.radius) * (cent_dist + the_enemy.radius - the_nebula.radius) * (cent_dist - the_enemy.radius + the_nebula.radius) * (cent_dist + the_enemy.radius + the_nebula.radius) ).sqrt();

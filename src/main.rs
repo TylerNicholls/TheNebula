@@ -21,6 +21,8 @@ const RED:      [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
+
+
 //Window Size
 const WINDOW_X: i32 = 800;
 const WINDOW_Y: i32 = 600;
@@ -50,6 +52,7 @@ pub struct Enemy {
     x_vel: f64,
     y_vel: f64,
     health: f64,
+    theta: f64,
     damage_rate: f64
 }
 
@@ -69,6 +72,7 @@ pub struct Bullet {
     y_vel: f64,
     exists: bool
 }
+
 
 //implementation of the Player struct
 impl Player {
@@ -137,7 +141,7 @@ impl Player {
     }
 }
 
-//implementation of the Player struct
+//implementation of the Enemy struct
 impl Enemy {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
@@ -245,20 +249,6 @@ impl Nebula {
             self.x_pos += self.x_vel * args.dt;
             self.y_pos += self.y_vel * args.dt;
             //boundaries
-            if self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius) {
-                self.x_vel = -(self.x_vel);
-                self.x_pos = 0.0;
-            } else if self.x_pos >= (((WINDOW_X/2) as f64)-self.radius) {
-                self.x_vel = -(self.x_vel);
-                self.x_pos = 0.0;
-            }
-            if self.y_pos <= (-((WINDOW_Y/2) as f64)+self.radius) {
-                self.y_vel = -(self.y_vel);
-                self.y_pos = 0.0;
-            } else if self.y_pos >= (((WINDOW_Y/2) as f64)-self.radius) {
-                self.y_vel = -(self.y_vel);
-                self.y_pos = 0.0;
-            }
         }
 
     }
@@ -314,6 +304,7 @@ fn main() {
      x_vel: 0.0,
      y_vel: 0.0,
      health: 100.0,
+     theta: 0,
      damage_rate: 0.0
  };
 
@@ -333,7 +324,6 @@ fn main() {
      y_vel: 50.0,
      exists: false
  };
-
 
 
  let mut can_shoot: bool = true;
@@ -357,9 +347,8 @@ fn main() {
             nebula.render(&r);
             player.render(&r);
             enemy.render(&r);
-            if bullet.exists {
-                bullet.render(&r);
-            }
+            bullet.render(&r);
+
         }
 
         if let Some(u) = e.update_args() {
@@ -373,6 +362,7 @@ fn main() {
             damage_enemy(&mut enemy, &mut nebula);
             if bullet.exists {
                 bullet.update(&u);
+                update_bullet(&mut bullet, &mut enemy);
             }
 
             if bullet_collision(&mut bullet, &mut player) {
@@ -410,6 +400,27 @@ fn main() {
 
 }   //end main
 
+fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
+    if the_bullet.x_pos <= (-((WINDOW_X/2) as f64)+the_bullet.radius) {
+        //self.x_vel = -(self.x_vel);
+        the_bullet.x_pos = the_enemy.x_pos;
+        the_bullet.y_pos = the_enemy.y_pos;
+    } else if the_bullet.x_pos >= (((WINDOW_X/2) as f64)-the_bullet.radius) {
+        //self.x_vel = -(self.x_vel);
+        the_bullet.x_pos = the_enemy.x_pos;
+        the_bullet.y_pos = the_enemy.y_pos;
+    }
+    if the_bullet.y_pos <= (-((WINDOW_Y/2) as f64)+the_bullet.radius) {
+        the_bullet.y_vel = -(the_bullet.y_vel);
+        the_bullet.y_pos = the_enemy.y_pos;
+        the_bullet.x_pos = the_enemy.x_pos;
+    } else if the_bullet.y_pos >= (((WINDOW_Y/2) as f64)-the_bullet.radius) {
+        the_bullet.y_vel = -(the_bullet.y_vel);
+        the_bullet.y_pos = the_enemy.y_pos;
+        the_bullet.x_pos = the_enemy.x_pos;
+
+    }
+}
 
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;

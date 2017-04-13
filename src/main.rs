@@ -2,6 +2,7 @@ extern crate piston;
 extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
+extern crate rand;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -9,10 +10,12 @@ use piston::input::*;
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use std::f64;
+use rand::Rng;
+use rand::distributions::{IndependentSample, Range};
 //use std::num::Int;
 
 const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-const RED:   [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+const RED:   [f32; 4] = [0.750, 0.0, 0.0, 0.20];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
@@ -20,6 +23,7 @@ const WINDOW_X: i32 = 600;
 const WINDOW_Y: i32 = 600;
 
 const PI :f64 = std::f64::consts::PI;
+const DRAG :f64 = 0.250;  //simple drag
 
 //struct containting information of the Player
 pub struct Player {
@@ -30,7 +34,8 @@ pub struct Player {
     y_pos: f64,
     x_vel: f64,
     y_vel: f64,
-    up_d: bool, down_d: bool, left_d: bool, right_d: bool
+    up_d: bool, down_d: bool, left_d: bool, right_d: bool,
+    lives: i32
 }
 
 pub struct Enemy {
@@ -41,6 +46,15 @@ pub struct Enemy {
     y_pos: f64,
     x_vel: f64,
     y_vel: f64,
+    health: f64,
+    damage_rate: f64
+}
+
+pub struct Nebula {
+    gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
+    x_pos: f64,
+    y_pos: f64,
 }
 
 //implementation of the Player struct
@@ -56,15 +70,11 @@ impl Player {
                       (args.height / 2) as f64);
 
         self.gl.draw(args.viewport(), |c, gl| {
-            // Clear the screen.
-            clear(GREY, gl);
 
             let transform = c.transform.trans(x, y) //move reference to center of square
                                        .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
-            // Draw a box rotating around the middle of the screen.
-            //rectangle(PURPLE, square, transform, gl);
             ellipse(PURPLE, shape1, transform, gl);
         });
     }
@@ -89,24 +99,20 @@ impl Player {
             self.right_d = false;
         }
         //boundaries
-        if (self.x_pos <= (-300.0+self.radius)) || (self.x_pos >= (300.0-self.radius)) {
+        if (self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius)) || (self.x_pos >= (((WINDOW_X/2) as f64)-self.radius)) {
             self.x_vel = -(self.x_vel);
         }
-        if (self.y_pos <= (-300.0+self.radius)) || (self.y_pos >= (300.0-self.radius)) {
+        if (self.y_pos <= (-((WINDOW_Y/2) as f64)+self.radius)) || (self.y_pos >= (((WINDOW_Y/2) as f64)-self.radius)) {
             self.y_vel = -(self.y_vel);
         }
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
-        let drag: f64 = 0.250;  //simple drag
-        //let mass: f64 = 1.0;    //mass
 
-        self.x_vel += -( (self.x_vel) * drag ) * args.dt ;
-        self.y_vel += -( (self.y_vel) * drag ) * args.dt ;
-        //println!("x_vel: {:.2}, y_vel: {:.2}",self.x_vel,self.y_vel);
+        self.x_vel += -( (self.x_vel) * DRAG ) * args.dt ;
+        self.y_vel += -( (self.y_vel) * DRAG ) * args.dt ;
+
     }
 }
-
-
 
 //implementation of the Player struct
 impl Enemy {
@@ -122,15 +128,11 @@ impl Enemy {
                       (WINDOW_Y / 2) as f64);
 
         self.gl.draw(args.viewport(), |c, gl| {
-            // Clear the screen.
-            //clear(GREY, gl);
 
             let transform = c.transform.trans(x, y) //move reference to center of square
                                        .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
-            // Draw a box rotating around the middle of the screen.
-            //rectangle(PURPLE, square, transform, gl);
             ellipse(GREEN, shape1, transform, gl);
         });
     }
@@ -138,23 +140,49 @@ impl Enemy {
         //let vel_bump: f64  = 20.0;
 
         //boundaries
-        if (self.x_pos <= (-300.0+self.radius)) || (self.x_pos >= (300.0-self.radius)) {
+        if (self.x_pos <= (-(WINDOW_X as f64)/2.0+self.radius)) || (self.x_pos >= ((WINDOW_X as f64)/2.0-self.radius)) {
             self.x_vel = -(self.x_vel);
         }
-        if (self.y_pos <= (-300.0+self.radius)) || (self.y_pos >= (300.0-self.radius)) {
+        if (self.y_pos <= (-(WINDOW_Y as f64)/2.0+self.radius)) || (self.y_pos >= ((WINDOW_Y as f64)/2.0-self.radius)) {
             self.y_vel = -(self.y_vel);
         }
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
-        let drag: f64 = 0.250;  //simple drag
-        //let mass: f64 = 1.0;    //mass
 
-        self.x_vel += -( (self.x_vel) * drag ) * args.dt ;
-        self.y_vel += -( (self.y_vel) * drag ) * args.dt ;
+        self.x_vel += -( (self.x_vel) * DRAG ) * args.dt ;
+        self.y_vel += -( (self.y_vel) * DRAG ) * args.dt ;
+
+        //Damage to enemy from being in the nebula
+        self.health -= self.damage_rate * args.dt;
         //println!("x_vel: {:.2}, y_vel: {:.2}",self.x_vel,self.y_vel);
-
     }
 }
+
+//implementation of the Nebula struct
+impl Nebula {
+    fn render(&mut self, args: &RenderArgs) {
+        use graphics::*;
+
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+        let x_pos = self.x_pos; //TW
+        let y_pos = self.y_pos; //TW
+
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+            // Clear the screen.
+            clear(GREY, gl);
+
+              let transform = c.transform.trans(x, y) //move reference to center of shape
+                                        .trans(-radius, -radius)
+                                        .trans(x_pos, y_pos);
+
+               ellipse(RED, shape1, transform, gl);
+        });
+      }
+  }
 
 
 
@@ -173,6 +201,12 @@ fn main() {
     .build()
     .unwrap();
 
+    //Random Number Generation
+    let between_x = Range::new(-((WINDOW_X/2) as f64), ((WINDOW_X/2) as f64));
+    let between_y = Range::new(-((WINDOW_Y/2) as f64), ((WINDOW_Y/2) as f64));
+    let mut rng = rand::thread_rng();
+    println!("rando: ({}, {})", between_x.ind_sample(&mut rng), between_y.ind_sample(&mut rng));
+
     // Create a new game and run it.
  let mut player = Player {
      gl: GlGraphics::new(opengl),
@@ -185,7 +219,8 @@ fn main() {
      up_d: false,
      down_d: false,
      left_d: false,
-     right_d: false
+     right_d: false,
+     lives: 3
  };
 
  let mut enemy = Enemy {
@@ -196,14 +231,22 @@ fn main() {
      y_pos: 90.0,
      x_vel: 0.0,
      y_vel: 0.0,
+     health: 100.0,
+     damage_rate: 0.0
  };
 
-//collision(player, enemy);
+ let mut nebula = Nebula {
+     gl: GlGraphics::new(opengl),
+     radius: 75.0,
+     x_pos: -90.0,
+     y_pos: -90.0
+ };
 
 //the event loop
  let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         if let Some(r) = e.render_args() {
+            nebula.render(&r);
             player.render(&r);
             enemy.render(&r);
         }
@@ -214,9 +257,9 @@ fn main() {
             //let returner: bool = collision(&mut player, &mut enemy);
             if collision(&mut player, &mut enemy) {
                 rebound(&mut player, &mut enemy);
-                println!("collide");
+                //println!("collide");
             }
-            //collision(&mut player, &mut enemy);
+            damage_enemy(&mut enemy, &mut nebula)
         }
 
         if let Some(button) = e.press_args() {
@@ -248,9 +291,8 @@ fn main() {
 
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;
-    //println!("the_player.x_pos: {:.2}, the_enemy.y_pos: {:.2}",the_player.x_pos, the_enemy.x_pos);
     let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
-    println!("centDist: {:.2}",cent_dist);
+    //println!("centDist: {:.2}",cent_dist);
     if cent_dist <= (the_enemy.radius + the_player.radius) {
         retval = true;
     }
@@ -259,16 +301,31 @@ fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
 
 fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
 
-        let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);
-        let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);
-        let phi:f64 = (the_enemy.y_pos - the_player.y_pos).atan2(the_enemy.x_pos - the_enemy.x_pos);
-        let enemy_net_vel: f64 = ( the_enemy.x_vel.powi(2) + the_enemy.y_vel.powi(2) ).sqrt();
+        let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);  //vector angle of player velocity
+        let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);     //vector angle of enemy velocity
+        let phi:f64 = (the_enemy.y_pos - the_player.y_pos).atan2(the_enemy.x_pos - the_player.x_pos);   //TODO: Check this
+        let enemy_net_vel: f64  = ( the_enemy.x_vel.powi(2)  + the_enemy.y_vel.powi(2)  ).sqrt();
         let player_net_vel: f64 = ( the_player.x_vel.powi(2) + the_player.y_vel.powi(2) ).sqrt();
 
-        the_enemy.x_vel  = (enemy_net_vel * (enemy_theta - phi).cos() * (the_enemy.mass - the_player.mass) + 2.0* the_player.mass*player_net_vel*(player_theta - phi).cos()*(phi).cos())/(the_enemy.mass + the_player.mass) + enemy_net_vel * (enemy_theta - phi).sin() * (phi + PI/2.0).cos();
-        the_enemy.y_vel  = (enemy_net_vel * (enemy_theta - phi).cos() * (the_enemy.mass - the_player.mass) + 2.0* the_player.mass*player_net_vel*(player_theta - phi).cos()*(phi).sin())/(the_enemy.mass + the_player.mass) + enemy_net_vel * (enemy_theta - phi).sin() * (phi + PI/2.0).sin();
+        the_enemy.x_vel  = (enemy_net_vel *  (enemy_theta - phi).cos()  * (the_enemy.mass - the_player.mass) + 2.0* the_player.mass*player_net_vel*(player_theta - phi).cos() * (phi).cos())/(the_enemy.mass + the_player.mass) + enemy_net_vel  * (enemy_theta - phi).sin()  * (phi + PI/2.0).cos();
+        the_enemy.y_vel  = (enemy_net_vel *  (enemy_theta - phi).cos()  * (the_enemy.mass - the_player.mass) + 2.0* the_player.mass*player_net_vel*(player_theta - phi).cos() * (phi).sin())/(the_enemy.mass + the_player.mass) + enemy_net_vel  * (enemy_theta - phi).sin()  * (phi + PI/2.0).sin();
 
-        the_player.x_vel  = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).cos())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).cos();
-        the_player.y_vel  = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
+        the_player.x_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).cos())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).cos();
+        the_player.y_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
+}
 
+fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
+    let damage_factor: f64 = 2.0;
+    let cent_dist: f64 = ((the_nebula.x_pos-the_enemy.x_pos).powi(2) + (the_nebula.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
+    if cent_dist <= (the_enemy.radius + the_nebula.radius)  {
+        if (cent_dist + the_enemy.radius) <= the_nebula.radius {
+            the_enemy.damage_rate = damage_factor;
+        } else {
+            let first_part: f64  = the_enemy.radius.powi(2)  * ( (cent_dist.powi(2)+ the_enemy.radius.powi(2)  - the_nebula.radius.powi(2)) / (2.0*cent_dist*the_enemy.radius)).acos();
+            let second_part: f64 = the_nebula.radius.powi(2) * ( (cent_dist.powi(2)+ the_nebula.radius.powi(2) - the_enemy.radius.powi(2)) / (2.0*cent_dist*the_nebula.radius)).acos();
+            let third_part: f64  = -0.5* ( (-cent_dist + the_enemy.radius + the_nebula.radius) * (cent_dist + the_enemy.radius - the_nebula.radius) * (cent_dist - the_enemy.radius + the_nebula.radius) * (cent_dist + the_enemy.radius + the_nebula.radius) ).sqrt();
+            the_enemy.damage_rate = damage_factor * (first_part + second_part + third_part) / (PI*the_enemy.radius.powi(2));
+        }
+        println!("damage! Health = {:.2}",the_enemy.health);
+    }
 }

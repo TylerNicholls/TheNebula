@@ -1,7 +1,7 @@
 # The Nebula
 ### A TMT Joint
 * Tyler Nicholls
-* Michael Spanolo
+* Michael Spagnolo
 * Tim Wilson
 
 Written in rust.
@@ -12,10 +12,9 @@ they move.
 
 
 ### Need to implement
-* the Nebula
 * damage to Player
-* damage to Enemy
-* lives icon
-* damage icon
+* player lives icon
+* enemy damage icon
 * bullets
 * aiming line on Enemy
+* random locations of elements

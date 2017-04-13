@@ -248,11 +248,10 @@ fn main() {
 
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;
-    println!("the_player.x_pos: {:.2}, the_enemy.y_pos: {:.2}",the_player.x_pos, the_enemy.x_pos);
+    //println!("the_player.x_pos: {:.2}, the_enemy.y_pos: {:.2}",the_player.x_pos, the_enemy.x_pos);
     let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     println!("centDist: {:.2}",cent_dist);
     if cent_dist <= (the_enemy.radius + the_player.radius) {
-        //println!("collision!");
         retval = true;
     }
     retval
@@ -266,15 +265,10 @@ fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
         let enemy_net_vel: f64 = ( the_enemy.x_vel.powi(2) + the_enemy.y_vel.powi(2) ).sqrt();
         let player_net_vel: f64 = ( the_player.x_vel.powi(2) + the_player.y_vel.powi(2) ).sqrt();
 
-        //let pi:f64 = const std::f64::consts::PI
+        the_enemy.x_vel  = (enemy_net_vel * (enemy_theta - phi).cos() * (the_enemy.mass - the_player.mass) + 2.0* the_player.mass*player_net_vel*(player_theta - phi).cos()*(phi).cos())/(the_enemy.mass + the_player.mass) + enemy_net_vel * (enemy_theta - phi).sin() * (phi + PI/2.0).cos();
+        the_enemy.y_vel  = (enemy_net_vel * (enemy_theta - phi).cos() * (the_enemy.mass - the_player.mass) + 2.0* the_player.mass*player_net_vel*(player_theta - phi).cos()*(phi).sin())/(the_enemy.mass + the_player.mass) + enemy_net_vel * (enemy_theta - phi).sin() * (phi + PI/2.0).sin();
 
+        the_player.x_vel  = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).cos())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).cos();
+        the_player.y_vel  = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
 
-        //the_enemy.x_vel  = (enemy_net_vel*( (player_theta - enemy_theta)/(the_player.mass - the_enemy.mass) ).cos() + 2.0*the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).cos())/(the_player.mass + the_enemy.mass) + player_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).cos();
-        //the_enemy.y_vel  = (enemy_net_vel*( (player_theta - enemy_theta)/(the_player.mass - the_enemy.mass) ).cos() + 2.0*the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()*(phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).sin();
-
-        //the_player.x_vel = (player_net_vel*( (player_theta - enemy_theta)/(the_enemy.mass - the_player.mass) ).cos() + 2.0*the_enemy.mass*player_net_vel*(enemy_theta - phi).cos()*(phi).cos())/(the_player.mass + the_enemy.mass) + enemy_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).sin();
-        //the_player.y_vel = (player_net_vel*( (player_theta - enemy_theta)/(the_enemy.mass - the_player.mass) ).cos() + 2.0*the_enemy.mass*player_net_vel*(enemy_theta - phi).cos()*(phi).sin())/(the_player.mass + the_enemy.mass) + enemy_net_vel*(player_theta - phi).sin()*(phi+PI/2.0).sin();
-
-        the_enemy.x_vel  = -the_player.x_vel;
-        the_enemy.y_vel  = -the_player.y_vel;
 }

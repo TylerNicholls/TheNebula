@@ -149,6 +149,7 @@ impl Enemy {
 
         let radius = self.radius;
         let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+        let shape2 = rectangle::square(self.radius, self.radius, self.radius);
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
 
@@ -364,6 +365,10 @@ fn main() {
 
             if bullet_collision(&mut bullet, &mut player) {
                 println!("hit!! Lives: {}",player.lives);
+                if player.lives <= 0 {
+                    println!("Player is Dead.");
+                    //TODO: implement player dead
+                }
             }
         }
 

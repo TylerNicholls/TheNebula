@@ -3,6 +3,7 @@ extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate rand;
+extern crate time;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -14,8 +15,9 @@ use std::f64;
 use rand::distributions::{IndependentSample, Range};
 //use std::num::Int;
 
-const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-const RED:   [f32; 4] = [0.750, 0.0, 0.0, 0.20];
+const GREEN:    [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+const YELLOW:   [f32; 4] = [1.0, 1.0, 0.0, 1.0];
+const RED:      [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
 
@@ -58,6 +60,16 @@ pub struct Nebula {
     y_pos: f64,
 }
 
+pub struct Bullet {
+    gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
+    x_pos: f64,
+    y_pos: f64,
+    x_vel: f64,
+    y_vel: f64,
+    exists: bool
+}
+
 //implementation of the Player struct
 impl Player {
     fn render(&mut self, args: &RenderArgs) {
@@ -76,7 +88,7 @@ impl Player {
                                        .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
-            ellipse(PURPLE, shape1, transform, gl);
+            ellipse(GREEN, shape1, transform, gl);
         });
     }
     fn update(&mut self, args: &UpdateArgs) {
@@ -144,7 +156,7 @@ impl Enemy {
                                        .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
-            ellipse(GREEN, shape1, transform, gl);
+            ellipse(YELLOW, shape1, transform, gl);
         });
     }
     fn update(&mut self, args: &UpdateArgs) {
@@ -200,11 +212,55 @@ impl Nebula {
                                         .trans(-radius, -radius)
                                         .trans(x_pos, y_pos);
 
-               ellipse(RED, shape1, transform, gl);
+               ellipse(PURPLE, shape1, transform, gl);
         });
       }
   }
 
+  impl Bullet {
+      fn render(&mut self, args: &RenderArgs) {
+          use graphics::*;
+
+          let radius = self.radius;
+          let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+          let x_pos = self.x_pos; //TW
+          let y_pos = self.y_pos; //TW
+
+          let (x, y) = ((WINDOW_X / 2) as f64,
+                        (WINDOW_Y / 2) as f64);
+
+          self.gl.draw(args.viewport(), |c, gl| {
+              // Clear the screen.
+              //clear(GREY, gl);
+
+                let transform = c.transform.trans(x, y) //move reference to center of shape
+                                          .trans(-radius, -radius)
+                                          .trans(x_pos, y_pos);
+
+                 ellipse(RED, shape1, transform, gl);
+          });
+        }
+        fn update(&mut self, args: &UpdateArgs) {
+            self.x_pos += self.x_vel * args.dt;
+            self.y_pos += self.y_vel * args.dt;
+            //boundaries
+            if self.x_pos <= (-((WINDOW_X/2) as f64)+self.radius) {
+                self.x_vel = -(self.x_vel);
+                self.x_pos = 0.0;
+            } else if self.x_pos >= (((WINDOW_X/2) as f64)-self.radius) {
+                self.x_vel = -(self.x_vel);
+                self.x_pos = 0.0;
+            }
+            if self.y_pos <= (-((WINDOW_Y/2) as f64)+self.radius) {
+                self.y_vel = -(self.y_vel);
+                self.y_pos = 0.0;
+            } else if self.y_pos >= (((WINDOW_Y/2) as f64)-self.radius) {
+                self.y_vel = -(self.y_vel);
+                self.y_pos = 0.0;
+            }
+        }
+
+    }
 
 
 
@@ -228,8 +284,12 @@ fn main() {
     let mut rng = rand::thread_rng();
     println!("rando: ({}, {})", between_x.ind_sample(&mut rng), between_y.ind_sample(&mut rng));
 
-    // Create a new game and run it.
- let mut player = Player {
+    //time
+    //let start_time = time::now();
+
+
+
+  let mut player = Player {
      gl: GlGraphics::new(opengl),
      radius: 50.0,
      mass: 1.0,
@@ -263,13 +323,42 @@ fn main() {
      y_pos: -90.0
  };
 
+ let mut bullet = Bullet {
+     gl: GlGraphics::new(opengl),
+     radius: 5.0,
+     x_pos: enemy.x_pos,
+     y_pos: enemy.y_pos,
+     x_vel: 50.0,
+     y_vel: 50.0,
+     exists: false
+ };
+
+
+
+ let mut can_shoot: bool = true;
+ //let mut bullet_exists: bool = false;
+
 //the event loop
  let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
+
+        let current_time = time::get_time();
+        //println!("start_time: {}", current_time.sec );
+        if (current_time.sec%5 == 0) && (can_shoot) {
+            println!("Shoot! start_time: {}", current_time.sec );
+            can_shoot = false;
+            bullet.exists = true;
+        } else if current_time.sec%5 != 0 {
+            can_shoot = true;
+        }
+
         if let Some(r) = e.render_args() {
             nebula.render(&r);
             player.render(&r);
             enemy.render(&r);
+            if bullet.exists {
+                bullet.render(&r);
+            }
         }
 
         if let Some(u) = e.update_args() {
@@ -280,7 +369,14 @@ fn main() {
                 rebound(&mut player, &mut enemy);
                 //println!("collide");
             }
-            damage_enemy(&mut enemy, &mut nebula)
+            damage_enemy(&mut enemy, &mut nebula);
+            if bullet.exists {
+                bullet.update(&u);
+            }
+
+            if bullet_collision(&mut bullet, &mut player) {
+                println!("hit!! Lives: {}",player.lives);
+            }
         }
 
         if let Some(button) = e.press_args() {
@@ -303,8 +399,8 @@ fn main() {
                 //println!("Right button pressed");
                 player.right_d = true;
             }
+        }   //end button
 
-        }
     }   //end while
 
 }   //end main
@@ -349,4 +445,18 @@ fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
         }
         println!("damage! Health = {:.2}",the_enemy.health);
     }
+}
+
+fn bullet_collision(the_bullet: &mut Bullet, the_player: &mut Player) -> bool {
+    let mut retval: bool = false;
+    let cent_dist: f64 = ((the_player.x_pos-the_bullet.x_pos).powi(2) + (the_player.y_pos-the_bullet.y_pos).powi(2) ).sqrt();
+    //println!("centDist: {:.2}",cent_dist);
+    if cent_dist <= (the_bullet.radius + the_player.radius) {
+        retval = true;
+        if the_bullet.exists {
+            the_player.lives -= 1;
+            the_bullet.exists = false;
+        }
+    }
+    retval
 }

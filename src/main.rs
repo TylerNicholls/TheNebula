@@ -452,8 +452,10 @@ fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
 
 fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
 
-        let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);  //vector angle of player velocity
-        let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);     //vector angle of enemy velocity
+        //let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);  //vector angle of player velocity
+        let player_theta:f64 = (the_player.y_vel).atan2(the_player.x_vel);  //vector angle of player velocity
+        //let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);     //vector angle of enemy velocity
+        let enemy_theta:f64 = (the_enemy.y_vel).atan2(the_enemy.x_vel);     //vector angle of enemy velocity
         let phi:f64 = (the_enemy.y_pos - the_player.y_pos).atan2(the_enemy.x_pos - the_player.x_pos);   //TODO: Check this
         let enemy_net_vel: f64  = ( the_enemy.x_vel.powi(2)  + the_enemy.y_vel.powi(2)  ).sqrt();
         let player_net_vel: f64 = ( the_player.x_vel.powi(2) + the_player.y_vel.powi(2) ).sqrt();

@@ -20,6 +20,7 @@ const YELLOW:   [f32; 4] = [1.0, 1.0, 0.0, 1.0];
 const RED:      [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
+const BLACK:    [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 
 
 
@@ -148,21 +149,28 @@ impl Enemy {
 
         let radius = self.radius;
         let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
-        let shape2 = rectangle::square(self.radius, self.radius, self.radius);
+        //let shape2 = line(YELLOW, 0.0, self.radius, [1.0,2.0], self.gl);
+        //let shape2 = line(&self, line: L, draw_state: &DrawState, transform: Matrix2d, g: &mut G)
+        let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
+        //let theta = self.theta;
 
         let (x, y) = ((WINDOW_X / 2) as f64,
                       (WINDOW_Y / 2) as f64);
 
         self.gl.draw(args.viewport(), |c, gl| {
 
-            let transform = c.transform.trans(x, y) //move reference to center of square
+            let transform = c.transform.trans(x, y) //move reference to center of shape
                                        .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
             ellipse(YELLOW, shape1, transform, gl);
-        });
+            //ellipse(RED, shape2, transform, gl);
+        } );
+
+
+
     }
     fn update(&mut self, args: &UpdateArgs) {
         //let vel_bump: f64  = 20.0;
@@ -186,6 +194,7 @@ impl Enemy {
         //Movement
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
+        self.theta += 2.0 * args.dt;
         //Drag
         self.x_vel += -( (self.x_vel) * DRAG ) * args.dt ;
         self.y_vel += -( (self.y_vel) * DRAG ) * args.dt ;
@@ -304,7 +313,7 @@ fn main() {
      x_vel: 0.0,
      y_vel: 0.0,
      health: 100.0,
-     theta: 0,
+     theta: 0.0,
      damage_rate: 0.0
  };
 

@@ -41,6 +41,7 @@ pub struct Player {
     x_vel: f64,
     y_vel: f64,
     up_d: bool, down_d: bool, left_d: bool, right_d: bool,
+    score: i64,
     lives: i32
 }
 
@@ -299,6 +300,7 @@ fn main() {
      down_d: false,
      left_d: false,
      right_d: false,
+      score: 0,
      lives: 3
  };
 
@@ -386,11 +388,7 @@ fn main() {
                 println!("hit!! Lives: {}",player.lives);
                 wait = time::get_time().sec;
                 if player.lives <= 0 {
-                    println!("Player is Dead.");
-                    let score: i64 = (1000 - (start_time - time::get_time().sec)) *1000;
-                    println!("score {:.2}", score);
-
-                    //TODO: implement player dead
+                    lose(&mut player, &mut enemy, &mut bullet, start_time);
                 }
             }
         }
@@ -450,11 +448,39 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
 
 
 }
+fn win(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet, start_time: i64){
+    println!("Enemy is Dead.");
+    let win_bonus: i64 = 100000;
+    the_player.score += (1000 - (start_time - time::get_time().sec)) *1000 + win_bonus;
+    println!("score {:.2}", the_player.score);
+
+    reset_frame(the_player, the_enemy, the_bullet);
+}
+
+fn lose(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet, start_time: i64){
+    println!("Player is Dead.");
+    the_player.score += (1000 - (start_time - time::get_time().sec)) *1000;
+    println!("score {:.2}", the_player.score);
+
+    reset_frame(the_player, the_enemy, the_bullet);
+}
+
+fn reset_frame(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet){
+        println!("start");
+        the_player.x_pos = 10000.0;
+        the_enemy.x_pos = 10000.0;
+        the_player.y_pos = 10000.0;
+        the_enemy.x_pos = 100000.0;
+        the_bullet.exists = false;
+        println!("end");
+
+}
 
 
 //boundaries
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;
+    the_player.score += (((the_player.x_vel.powi(2) + the_player.y_vel.powi(2)).sqrt()) as i64) * 100 ;
     let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     //println!("centDist: {:.2}",cent_dist);
     if cent_dist <= (the_enemy.radius + the_player.radius) {

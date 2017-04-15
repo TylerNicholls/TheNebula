@@ -43,6 +43,7 @@ pub struct Player {
     y_vel: f64,
     up_d: bool, down_d: bool, left_d: bool, right_d: bool,
     score: i64,
+    difficulty: i32,
     lives: i32
 }
 
@@ -114,7 +115,7 @@ impl Player {
         });
     }
     fn update(&mut self, args: &UpdateArgs) {
-        let vel_bump: f64  = 20.0;
+        let vel_bump: f64  = 10.0 * self.difficulty as f64;
         if self.up_d {
             self.y_vel += -vel_bump;
             self.up_d = false;
@@ -326,11 +327,13 @@ impl Power {
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let mut difficulty: i64 = 1;
+    let mut difficulty: i32 = 1;
+
     let args: Vec<_> = env::args().collect();
-    if args.len() == 1 {
+
+    if args.len() > 1  {
         println!("The first argument is {}", args[1]);
-        difficulty = args[1];
+        difficulty = args[1].parse::<i32>().unwrap();
     }
 
     let start_time = time::get_time().sec;
@@ -366,6 +369,7 @@ fn main() {
      left_d: false,
      right_d: false,
       score: 0,
+      difficulty: difficulty,
      lives: 3
  };
 
@@ -531,7 +535,7 @@ fn reset_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     the_enemy.bullet_theta = the_enemy.theta;
 }
 
-fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy, difficulty: i64){
+fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy, difficulty: i32){
     if the_bullet.x_pos <= (-((WINDOW_X/2) as f64)+the_bullet.radius) {
         reset_bullet(the_bullet, the_enemy);
 

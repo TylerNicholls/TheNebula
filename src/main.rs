@@ -83,7 +83,13 @@ pub struct Lives {
     y_pos: f64,
 }
 
-
+pub struct Power {
+    gl: GlGraphics, // OpenGL drawing backend.
+    height: f64,
+    width: f64,
+    x_pos: f64,
+    y_pos: f64,
+}
 
 //implementation of the Player struct
 impl Player {
@@ -267,7 +273,28 @@ impl Lives {
     }
 }
 
+impl Power {
+    fn render (&mut self, args: &RenderArgs) {
+        use graphics::*;
 
+        let height = self.height;
+        let width = self.width;
+        let shape1 = rectangle::rectangle_by_corners(0.0, 0.0, self.width, self.height);
+        let x_pos = self.x_pos;
+        let y_pos = self.y_pos;
+
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+
+            let transform = c.transform.trans(x, y) //move reference to center of shape
+                .trans(x_pos, y_pos);
+
+            rectangle(YELLOW, shape1, transform, gl);
+        });
+    }
+}
 
   impl Bullet {
       fn render(&mut self, args: &RenderArgs) {
@@ -375,6 +402,14 @@ fn main() {
         y_pos: -270.0
     };
 
+  let mut power = Power {
+      gl: GlGraphics::new(opengl),
+      height: 20.0,
+      width: 100.0,
+      x_pos: 280.0,
+      y_pos: -280.0
+  };
+
  let mut bullet = Bullet {
      gl: GlGraphics::new(opengl),
      radius: 5.0,
@@ -420,6 +455,9 @@ fn main() {
                     life3.render(&r);
                 }
             }
+
+            power.width = enemy.health;
+            power.render(&r);
 
          }
 
@@ -563,7 +601,7 @@ fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
 }
 
 fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
-    let damage_factor: f64 = 2.0;
+    let damage_factor: f64 = 20.0;
     let cent_dist: f64 = ((the_nebula.x_pos-the_enemy.x_pos).powi(2) + (the_nebula.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     if cent_dist <= (the_enemy.radius + the_nebula.radius)  {
         if (cent_dist + the_enemy.radius) <= the_nebula.radius {    //completely in the nebula

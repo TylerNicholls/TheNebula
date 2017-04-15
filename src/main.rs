@@ -4,6 +4,7 @@ extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate rand;
 extern crate time;
+use std::env;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -324,6 +325,13 @@ impl Power {
 
 fn main() {
     let opengl = OpenGL::V3_2;
+    let mut difficulty: i64 = 1;
+    let args: Vec<_> = env::args().collect();
+    if args.len() > 1 {
+        println!("The first argument is {}", args[1]);
+        difficulty = 2;
+    }
+
     let start_time = time::get_time().sec;
     let mut window: Window = WindowSettings::new(
         "The Nebula!!",
@@ -476,7 +484,7 @@ fn main() {
             }
             damage_enemy(&mut enemy, &mut nebula);
             if bullet.exists && wait == 0 {
-                update_bullet(&mut bullet, &mut enemy);
+                update_bullet(&mut bullet, &mut enemy, difficulty);
             }else {
                 reset_bullet(&mut bullet, &mut enemy);
             }
@@ -522,7 +530,7 @@ fn reset_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     the_enemy.bullet_theta = the_enemy.theta;
 }
 
-fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
+fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy, difficulty: i64){
     if the_bullet.x_pos <= (-((WINDOW_X/2) as f64)+the_bullet.radius) {
         reset_bullet(the_bullet, the_enemy);
 
@@ -537,7 +545,7 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     }
 
 
-    let bullet_speed: f64 = 5.0;
+    let bullet_speed: f64 = 5.0 * difficulty as f64;
     the_bullet.x_vel = bullet_speed * the_enemy.bullet_theta.cos();
     the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
     the_bullet.x_pos += the_bullet.x_vel;
@@ -563,13 +571,9 @@ fn lose(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet,
 
 fn reset_frame(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet){
         println!("start");
-        the_player.x_pos = 10000.0;
-        the_enemy.x_pos = 10000.0;
-        the_player.y_pos = 10000.0;
-        the_enemy.x_pos = 100000.0;
-        the_bullet.exists = false;
-        println!("end");
-
+        while true {
+            //clear(GREY, the_player.gl);
+        }
 }
 
 

@@ -264,7 +264,7 @@ impl Lives {
                 .trans(-radius, -radius)
                 .trans(x_pos, y_pos);
 
-            ellipse(YELLOW, shape1, transform, gl);
+            ellipse(GREEN, shape1, transform, gl);
         });
     }
 }

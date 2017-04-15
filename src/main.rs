@@ -159,7 +159,7 @@ impl Enemy {
         let radius = self.radius;
         let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
 
-        let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
+        //let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
 
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
@@ -252,13 +252,10 @@ impl Lives {
         let x_pos = self.x_pos;
         let y_pos = self.y_pos;
 
-
-
         let (x, y) = ((WINDOW_X / 2) as f64,
                       (WINDOW_Y / 2) as f64);
 
         self.gl.draw(args.viewport(), |c, gl| {
-
 
             let transform = c.transform.trans(x, y) //move reference to center of shape
                 .trans(-radius, -radius)
@@ -297,9 +294,6 @@ impl Lives {
     }
 
 
-
-
-
 fn main() {
     let opengl = OpenGL::V3_2;
     let start_time = time::get_time().sec;
@@ -320,7 +314,6 @@ fn main() {
 
     //time
     //let start_time = time::now();
-
 
 
   let mut player = Player {
@@ -513,7 +506,6 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
     the_bullet.x_pos += the_bullet.x_vel;
     the_bullet.y_pos += the_bullet.y_vel;
-
 
 }
 

@@ -20,6 +20,7 @@ const YELLOW:   [f32; 4] = [1.0, 1.0, 0.0, 1.0];
 const RED:      [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
+const BLACK:    [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 
 
 
@@ -149,21 +150,28 @@ impl Enemy {
 
         let radius = self.radius;
         let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
-        //let shape2 = rectangle::square(self.radius, self.radius, self.radius);
+
+        let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
+
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
+        //let theta = self.theta;
 
         let (x, y) = ((WINDOW_X / 2) as f64,
                       (WINDOW_Y / 2) as f64);
 
         self.gl.draw(args.viewport(), |c, gl| {
 
-            let transform = c.transform.trans(x, y) //move reference to center of square
+            let transform = c.transform.trans(x, y) //move reference to center of shape
                                        .trans(-radius, -radius)
                                        .trans(x_pos, y_pos);
 
             ellipse(YELLOW, shape1, transform, gl);
-        });
+            //ellipse(RED, shape2, transform, gl);
+        } );
+
+
+
     }
     fn update(&mut self, args: &UpdateArgs) {
         //let vel_bump: f64  = 20.0;
@@ -190,6 +198,7 @@ impl Enemy {
         //Movement
         self.x_pos += self.x_vel * args.dt;
         self.y_pos += self.y_vel * args.dt;
+        self.theta += 2.0 * args.dt;
         //Drag
         self.x_vel += -( (self.x_vel) * DRAG ) * args.dt ;
         self.y_vel += -( (self.y_vel) * DRAG ) * args.dt ;
@@ -369,6 +378,8 @@ fn main() {
             damage_enemy(&mut enemy, &mut nebula);
             if bullet.exists && wait == 0 {
                 update_bullet(&mut bullet, &mut enemy);
+            }else {
+                reset_bullet(&mut bullet, &mut enemy);
             }
 
             if bullet_collision(&mut bullet, &mut player, &mut enemy) {
@@ -454,8 +465,10 @@ fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
 
 fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
 
-        let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);  //vector angle of player velocity
-        let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);     //vector angle of enemy velocity
+        //let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);  //vector angle of player velocity
+        let player_theta:f64 = (the_player.y_vel).atan2(the_player.x_vel);  //vector angle of player velocity
+        //let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);     //vector angle of enemy velocity
+        let enemy_theta:f64 = (the_enemy.y_vel).atan2(the_enemy.x_vel);     //vector angle of enemy velocity
         let phi:f64 = (the_enemy.y_pos - the_player.y_pos).atan2(the_enemy.x_pos - the_player.x_pos);   //TODO: Check this
         let enemy_net_vel: f64  = ( the_enemy.x_vel.powi(2)  + the_enemy.y_vel.powi(2)  ).sqrt();
         let player_net_vel: f64 = ( the_player.x_vel.powi(2) + the_player.y_vel.powi(2) ).sqrt();

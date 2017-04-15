@@ -300,9 +300,9 @@ fn main() {
     let opengl = OpenGL::V3_2;
     let mut difficulty: i64 = 1;
     let args: Vec<_> = env::args().collect();
-    if args.len() > 1 {
+    if args.len() == 1 {
         println!("The first argument is {}", args[1]);
-        difficulty = 2;
+        difficulty = args[1];
     }
 
     let start_time = time::get_time().sec;

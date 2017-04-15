@@ -307,9 +307,9 @@ fn main() {
     .unwrap();
 
     //Random Number Generation
-    let between_x = Range::new(-((WINDOW_X/2) as f64), ((WINDOW_X/2) as f64));
-    let between_y = Range::new(-((WINDOW_Y/2) as f64), ((WINDOW_Y/2) as f64));
-    let mut rng = rand::thread_rng();
+    //let between_x = Range::new(-((WINDOW_X/2) as f64), ((WINDOW_X/2) as f64));
+    //let between_y = Range::new(-((WINDOW_Y/2) as f64), ((WINDOW_Y/2) as f64));
+    //let mut rng = rand::thread_rng();
     //println!("rando: ({}, {})", between_x.ind_sample(&mut rng), between_y.ind_sample(&mut rng));
 
     //time

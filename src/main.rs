@@ -282,7 +282,6 @@ impl Power {
         let width = self.width;
         let init_width = self.width;
         let shape1 = rectangle::rectangle_by_corners(0.0, 0.0, self.width, self.height);
-        let shape2 = rectangle::rectangle_by_corners(0.0, 0.0, self.init_width, self.height);
         let x_pos = self.x_pos;
         let y_pos = self.y_pos;
 
@@ -294,7 +293,6 @@ impl Power {
             let transform = c.transform.trans(x, y) //move reference to center of shape
                 .trans(x_pos, y_pos);
 
-            rectangle(RED, shape2, transform, gl);
             rectangle(YELLOW, shape1, transform, gl);
         });
     }

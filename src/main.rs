@@ -487,7 +487,7 @@ fn main() {
                 rebound(&mut player, &mut enemy);
                 //println!("collide");
             }
-            damage_enemy(&mut enemy, &mut nebula);
+            damage_enemy(&mut enemy, &mut nebula, &mut player, &mut bullet, start_time);
             if bullet.exists && wait == 0 {
                 update_bullet(&mut bullet, &mut enemy, difficulty);
             }else {
@@ -576,6 +576,7 @@ fn lose(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet,
 
 fn reset_frame(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet){
         println!("start");
+    #[warn(while_true)]
         while true {
             //clear(GREY, the_player.gl);
         }
@@ -609,8 +610,8 @@ fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
         the_player.y_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
 }
 
-fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
-    let damage_factor: f64 = 20.0;
+fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula, the_player: &mut Player, the_bullet: &mut Bullet, start_time: i64) {
+    let damage_factor: f64 = 40.0;
     let cent_dist: f64 = ((the_nebula.x_pos-the_enemy.x_pos).powi(2) + (the_nebula.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     if cent_dist <= (the_enemy.radius + the_nebula.radius)  {
         if (cent_dist + the_enemy.radius) <= the_nebula.radius {    //completely in the nebula
@@ -622,6 +623,9 @@ fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
             the_enemy.damage_rate = damage_factor * (first_part + second_part + third_part) / (PI*the_enemy.radius.powi(2));
         }
         println!("damage! Health = {:.2}",the_enemy.health);
+        if the_enemy.health <= 0.0{
+            win(the_player, the_enemy, the_bullet, start_time);
+        }
     }
 }
 

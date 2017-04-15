@@ -152,6 +152,7 @@ impl Enemy {
         let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
 
         let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
+
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
 
@@ -264,7 +265,7 @@ impl Nebula {
 
 fn main() {
     let opengl = OpenGL::V3_2;
-
+    let start_time = time::get_time().sec;
     let mut window: Window = WindowSettings::new(
         "The Nebula!!",
         [(WINDOW_X as u32), (WINDOW_Y as u32)]
@@ -333,6 +334,7 @@ fn main() {
 
 
  let mut can_shoot: bool = true;
+ let mut is_start: bool = true;
  //let mut bullet_exists: bool = false;
 
 //the event loop
@@ -340,12 +342,15 @@ fn main() {
     while let Some(e) = events.next(&mut window) {
 
         let current_time = time::get_time();
-        //println!("start_time: {}", current_time.sec );
-        if (current_time.sec%5 == 0) && (can_shoot) {
+
+
+        println!("start_time: {}", current_time.sec );
+        if (is_start || current_time.sec%3 == 0) && (can_shoot) {
             println!("Shoot! start_time: {}", current_time.sec );
             can_shoot = false;
+            is_start = false;
             bullet.exists = true;
-        } else if current_time.sec%5 != 0 {
+        } else if current_time.sec%3 != 0 {
             can_shoot = true;
         }
 
@@ -358,6 +363,10 @@ fn main() {
         }
 
         if let Some(u) = e.update_args() {
+            let mut wait: i64 = 0;
+            if wait - time::get_time().sec < 0{
+                wait = 0;
+            }
             player.update(&u);
             enemy.update(&u);
             //let returner: bool = collision(&mut player, &mut enemy);
@@ -366,14 +375,20 @@ fn main() {
                 //println!("collide");
             }
             damage_enemy(&mut enemy, &mut nebula);
-            if bullet.exists {
+            if bullet.exists && wait == 0 {
                 update_bullet(&mut bullet, &mut enemy);
+            }else {
+                reset_bullet(&mut bullet, &mut enemy);
             }
 
-            if bullet_collision(&mut bullet, &mut player) {
+            if bullet_collision(&mut bullet, &mut player, &mut enemy) {
                 println!("hit!! Lives: {}",player.lives);
+                wait = time::get_time().sec;
                 if player.lives <= 0 {
                     println!("Player is Dead.");
+                    let score: i64 = (1000 - (start_time - time::get_time().sec)) *1000;
+                    println!("score {:.2}", score);
+
                     //TODO: implement player dead
                 }
             }
@@ -405,34 +420,33 @@ fn main() {
 
 }   //end main
 
+fn reset_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
+    the_bullet.x_pos = the_enemy.x_pos;
+    the_bullet.y_pos = the_enemy.y_pos;
+    the_enemy.bullet_theta = the_enemy.theta;
+}
+
 fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     if the_bullet.x_pos <= (-((WINDOW_X/2) as f64)+the_bullet.radius) {
-        //self.x_vel = -(self.x_vel);
-        the_bullet.x_pos = the_enemy.x_pos;
-        the_bullet.y_pos = the_enemy.y_pos;
-        the_enemy.bullet_theta = the_enemy.theta;
+        reset_bullet(the_bullet, the_enemy);
+
     } else if the_bullet.x_pos >= (((WINDOW_X/2) as f64)-the_bullet.radius) {
-        //self.x_vel = -(self.x_vel);
-        the_bullet.x_pos = the_enemy.x_pos;
-        the_bullet.y_pos = the_enemy.y_pos;
-        the_enemy.bullet_theta = the_enemy.theta;
+        reset_bullet(the_bullet, the_enemy);
     }
     if the_bullet.y_pos <= (-((WINDOW_Y/2) as f64)+the_bullet.radius) {
-        //the_bullet.y_vel = -(the_bullet.y_vel);
-        the_bullet.y_pos = the_enemy.y_pos;
-        the_bullet.x_pos = the_enemy.x_pos;
-        the_enemy.bullet_theta = the_enemy.theta;
+        reset_bullet(the_bullet, the_enemy);
+
     } else if the_bullet.y_pos >= (((WINDOW_Y/2) as f64)-the_bullet.radius) {
-        //the_bullet.y_vel = -(the_bullet.y_vel);
-        the_bullet.y_pos = the_enemy.y_pos;
-        the_bullet.x_pos = the_enemy.x_pos;
-        the_enemy.bullet_theta = the_enemy.theta;
+        reset_bullet(the_bullet, the_enemy);
     }
-        let bullet_speed:f64 = 5.0;
-        the_bullet.x_vel = bullet_speed * the_enemy.bullet_theta.cos();
-        the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
-        the_bullet.x_pos += the_bullet.x_vel;
-        the_bullet.y_pos += the_bullet.y_vel;
+
+
+    let bullet_speed: f64 = 5.0;
+    the_bullet.x_vel = bullet_speed * the_enemy.bullet_theta.cos();
+    the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
+    the_bullet.x_pos += the_bullet.x_vel;
+    the_bullet.y_pos += the_bullet.y_vel;
+
 
 }
 
@@ -479,7 +493,7 @@ fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
     }
 }
 
-fn bullet_collision(the_bullet: &mut Bullet, the_player: &mut Player) -> bool {
+fn bullet_collision(the_bullet: &mut Bullet, the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;
     let cent_dist: f64 = ((the_player.x_pos-the_bullet.x_pos).powi(2) + (the_player.y_pos-the_bullet.y_pos).powi(2) ).sqrt();
     //println!("centDist: {:.2}",cent_dist);
@@ -487,6 +501,7 @@ fn bullet_collision(the_bullet: &mut Bullet, the_player: &mut Player) -> bool {
         retval = true;
         if the_bullet.exists {
             the_player.lives -= 1;
+            reset_bullet(the_bullet, the_enemy);
             the_bullet.exists = false;
         }
     }

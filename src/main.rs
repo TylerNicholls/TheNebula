@@ -280,7 +280,9 @@ impl Power {
 
         let height = self.height;
         let width = self.width;
+        let init_width = self.width;
         let shape1 = rectangle::rectangle_by_corners(0.0, 0.0, self.width, self.height);
+        let shape2 = rectangle::rectangle_by_corners(0.0, 0.0, self.init_width, self.height);
         let x_pos = self.x_pos;
         let y_pos = self.y_pos;
 
@@ -292,6 +294,7 @@ impl Power {
             let transform = c.transform.trans(x, y) //move reference to center of shape
                 .trans(x_pos, y_pos);
 
+            rectangle(RED, shape2, transform, gl);
             rectangle(YELLOW, shape1, transform, gl);
         });
     }
@@ -440,7 +443,7 @@ fn main() {
         let current_time = time::get_time();
 
 
-        println!("start_time: {}", current_time.sec );
+       // println!("start_time: {}", current_time.sec );
         if (is_start || current_time.sec%3 == 0) && (can_shoot) {
             println!("Shoot! start_time: {}", current_time.sec );
             can_shoot = false;
@@ -545,7 +548,7 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy, difficulty: i64
     }
 
 
-    let bullet_speed: f64 = 5.0 * difficulty as f64;
+    let bullet_speed: f64 = 1.0 * difficulty as f64;
     the_bullet.x_vel = bullet_speed * the_enemy.bullet_theta.cos();
     the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
     the_bullet.x_pos += the_bullet.x_vel;

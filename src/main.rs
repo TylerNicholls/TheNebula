@@ -75,6 +75,14 @@ pub struct Bullet {
     exists: bool
 }
 
+pub struct Lives {
+    gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
+    x_pos: f64,
+    y_pos: f64,
+}
+
+
 
 //implementation of the Player struct
 impl Player {
@@ -235,6 +243,35 @@ impl Nebula {
       }
   }
 
+//implementation of the Lives struct
+impl Lives {
+    fn render (&mut self, args: &RenderArgs) {
+        use graphics::*;
+
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+        let x_pos = self.x_pos;
+        let y_pos = self.y_pos;
+
+
+
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+
+
+            let transform = c.transform.trans(x, y) //move reference to center of shape
+                .trans(-radius, -radius)
+                .trans(x_pos, y_pos);
+
+            ellipse(YELLOW, shape1, transform, gl);
+        });
+    }
+}
+
+
+
   impl Bullet {
       fn render(&mut self, args: &RenderArgs) {
           use graphics::*;
@@ -323,6 +360,27 @@ fn main() {
      y_pos: -90.0
  };
 
+ let mut life1 = Lives {
+     gl: GlGraphics::new(opengl),
+     radius: 10.0,
+     x_pos: -370.0,
+     y_pos: -270.0
+    };
+
+ let mut life2 = Lives {
+        gl: GlGraphics::new(opengl),
+        radius: 10.0,
+        x_pos: -345.0,
+        y_pos: -270.0
+    };
+
+ let mut life3 = Lives {
+        gl: GlGraphics::new(opengl),
+        radius: 10.0,
+        x_pos: -320.0,
+        y_pos: -270.0
+    };
+
  let mut bullet = Bullet {
      gl: GlGraphics::new(opengl),
      radius: 5.0,
@@ -356,8 +414,17 @@ fn main() {
             player.render(&r);
             enemy.render(&r);
             bullet.render(&r);
+            life1.render(&r);
 
-        }
+            if player.lives > 1 {
+                life2.render(&r);
+                if player.lives > 2 {
+                    life3.render(&r);
+                }
+            }
+
+         }
+
 
         if let Some(u) = e.update_args() {
             player.update(&u);

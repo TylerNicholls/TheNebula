@@ -76,6 +76,14 @@ pub struct Bullet {
     exists: bool
 }
 
+pub struct Lives {
+    gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
+    x_pos: f64,
+    y_pos: f64,
+}
+
+
 
 //implementation of the Player struct
 impl Player {
@@ -152,11 +160,10 @@ impl Enemy {
         let radius = self.radius;
         let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
 
-        let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
+        //let shape2 = rectangle::square( (2.0*self.radius - self.radius/3.0), (self.radius - self.radius/6.0), self.radius/3.0);
 
         let x_pos = self.x_pos; //TW
         let y_pos = self.y_pos; //TW
-        //let theta = self.theta;
 
         let (x, y) = ((WINDOW_X / 2) as f64,
                       (WINDOW_Y / 2) as f64);
@@ -236,6 +243,32 @@ impl Nebula {
       }
   }
 
+//implementation of the Lives struct
+impl Lives {
+    fn render (&mut self, args: &RenderArgs) {
+        use graphics::*;
+
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+        let x_pos = self.x_pos;
+        let y_pos = self.y_pos;
+
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+
+            let transform = c.transform.trans(x, y) //move reference to center of shape
+                .trans(-radius, -radius)
+                .trans(x_pos, y_pos);
+
+            ellipse(GREEN, shape1, transform, gl);
+        });
+    }
+}
+
+
+
   impl Bullet {
       fn render(&mut self, args: &RenderArgs) {
           use graphics::*;
@@ -262,9 +295,6 @@ impl Nebula {
     }
 
 
-
-
-
 fn main() {
     let opengl = OpenGL::V3_2;
     let start_time = time::get_time().sec;
@@ -278,14 +308,13 @@ fn main() {
     .unwrap();
 
     //Random Number Generation
-    let between_x = Range::new(-((WINDOW_X/2) as f64), ((WINDOW_X/2) as f64));
-    let between_y = Range::new(-((WINDOW_Y/2) as f64), ((WINDOW_Y/2) as f64));
-    let mut rng = rand::thread_rng();
-    println!("rando: ({}, {})", between_x.ind_sample(&mut rng), between_y.ind_sample(&mut rng));
+    //let between_x = Range::new(-((WINDOW_X/2) as f64), ((WINDOW_X/2) as f64));
+    //let between_y = Range::new(-((WINDOW_Y/2) as f64), ((WINDOW_Y/2) as f64));
+    //let mut rng = rand::thread_rng();
+    //println!("rando: ({}, {})", between_x.ind_sample(&mut rng), between_y.ind_sample(&mut rng));
 
     //time
     //let start_time = time::now();
-
 
 
   let mut player = Player {
@@ -325,6 +354,27 @@ fn main() {
      y_pos: -90.0
  };
 
+ let mut life1 = Lives {
+     gl: GlGraphics::new(opengl),
+     radius: 10.0,
+     x_pos: -370.0,
+     y_pos: -270.0
+    };
+
+ let mut life2 = Lives {
+        gl: GlGraphics::new(opengl),
+        radius: 10.0,
+        x_pos: -345.0,
+        y_pos: -270.0
+    };
+
+ let mut life3 = Lives {
+        gl: GlGraphics::new(opengl),
+        radius: 10.0,
+        x_pos: -320.0,
+        y_pos: -270.0
+    };
+
  let mut bullet = Bullet {
      gl: GlGraphics::new(opengl),
      radius: 5.0,
@@ -362,8 +412,17 @@ fn main() {
             player.render(&r);
             enemy.render(&r);
             bullet.render(&r);
+            life1.render(&r);
 
-        }
+            if player.lives > 1 {
+                life2.render(&r);
+                if player.lives > 2 {
+                    life3.render(&r);
+                }
+            }
+
+         }
+
 
         if let Some(u) = e.update_args() {
             let mut wait: i64 = 0;
@@ -446,7 +505,6 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     the_bullet.x_pos += the_bullet.x_vel;
     the_bullet.y_pos += the_bullet.y_vel;
 
-
 }
 fn win(the_player: &mut Player, the_enemy: &mut Enemy, the_bullet: &mut Bullet, start_time: i64){
     println!("Enemy is Dead.");
@@ -491,9 +549,7 @@ fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
 
 fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
 
-        //let player_theta:f64 = (the_player.x_vel).atan2(the_player.y_vel);  //vector angle of player velocity
         let player_theta:f64 = (the_player.y_vel).atan2(the_player.x_vel);  //vector angle of player velocity
-        //let enemy_theta:f64 = (the_enemy.x_vel).atan2(the_enemy.y_vel);     //vector angle of enemy velocity
         let enemy_theta:f64 = (the_enemy.y_vel).atan2(the_enemy.x_vel);     //vector angle of enemy velocity
         let phi:f64 = (the_enemy.y_pos - the_player.y_pos).atan2(the_enemy.x_pos - the_player.x_pos);   //TODO: Check this
         let enemy_net_vel: f64  = ( the_enemy.x_vel.powi(2)  + the_enemy.y_vel.powi(2)  ).sqrt();

@@ -13,7 +13,7 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use std::f64;
 //use rand::Rng;
-use rand::distributions::{IndependentSample, Range};
+//use rand::distributions::{IndependentSample, Range};
 //use std::num::Int;
 
 const GREEN:    [f32; 4] = [0.0, 1.0, 0.0, 1.0];
@@ -21,7 +21,7 @@ const YELLOW:   [f32; 4] = [1.0, 1.0, 0.0, 1.0];
 const RED:      [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const PURPLE:   [f32; 4] = [0.64, 0.0, 0.91, 1.0];
 const GREY:     [f32; 4] = [0.1, 0.1, 0.1, 1.0];
-const BLACK:    [f32; 4] = [0.0, 0.0, 0.0, 0.0];
+//const BLACK:    [f32; 4] = [0.0, 0.0, 0.0, 0.0];
 
 
 
@@ -85,14 +85,14 @@ pub struct Lives {
     y_pos: f64,
 }
 
-pub struct Win_Screen {
+pub struct  WinScreen {
     gl: GlGraphics, // OpenGL drawing backend.
     radius: f64,
     x_pos: f64,
     y_pos: f64,
 }
 
-pub struct Lose_Screen {
+pub struct LoseScreen {
     gl: GlGraphics, // OpenGL drawing backend.
     radius: f64,
     x_pos: f64,
@@ -293,9 +293,9 @@ impl Power {
     fn render (&mut self, args: &RenderArgs) {
         use graphics::*;
 
-        let height = self.height;
-        let width = self.width;
-        let init_width = self.width;
+        //let height = self.height;
+        //let width = self.width;
+        //let init_width = self.width;
         let shape1 = rectangle::rectangle_by_corners(0.0, 0.0, self.width, self.height);
         let x_pos = self.x_pos;
         let y_pos = self.y_pos;
@@ -313,7 +313,7 @@ impl Power {
     }
 }
 
-impl Win_Screen {
+impl WinScreen {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
@@ -338,7 +338,7 @@ impl Win_Screen {
     }
 }
 
-impl Lose_Screen {
+impl LoseScreen {
     fn render(&mut self, args: &RenderArgs) {
         use graphics::*;
 
@@ -486,14 +486,14 @@ fn main() {
       y_pos: -280.0
   };
 
-    let mut win_screen = Win_Screen {
+    let mut win_screen = WinScreen {
         gl: GlGraphics::new(opengl),
         radius: 75.0,
         x_pos: -90.0,
         y_pos: -90.0
     };
 
-    let mut lose_screen = Lose_Screen {
+    let mut lose_screen = LoseScreen {
         gl: GlGraphics::new(opengl),
         radius: 75.0,
         x_pos: -90.0,
@@ -524,7 +524,7 @@ fn main() {
 
        // println!("start_time: {}", current_time.sec );
         if (is_start || current_time.sec%3 == 0) && (can_shoot) {
-            println!("Shoot! start_time: {}", current_time.sec );
+            //println!("Shoot! start_time: {}", current_time.sec );
             can_shoot = false;
             is_start = false;
             bullet.exists = true;
@@ -586,7 +586,7 @@ fn main() {
 
             if bullet_collision(&mut bullet, &mut player, &mut enemy) {
                 println!("hit!! Lives: {}",player.lives);
-                wait = time::get_time().sec;
+                //wait = time::get_time().sec;
 //                if player.lives <= 0 {
 //                    lose(&mut player, start_time);
 //                }
@@ -712,7 +712,7 @@ fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula, the_player: &mut
             let third_part: f64  = -0.5* ( (-cent_dist + the_enemy.radius + the_nebula.radius) * (cent_dist + the_enemy.radius - the_nebula.radius) * (cent_dist - the_enemy.radius + the_nebula.radius) * (cent_dist + the_enemy.radius + the_nebula.radius) ).sqrt();
             the_enemy.damage_rate = damage_factor * (first_part + second_part + third_part) / (PI*the_enemy.radius.powi(2));
         }
-        println!("damage! Health = {:.2}",the_enemy.health);
+        //println!("damage! Health = {:.2}",the_enemy.health);
 
     }
 }

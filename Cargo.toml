@@ -1,7 +1,9 @@
 [package]
 name = "the_nebula"
 version = "0.1.0"
-authors = ["Tim Wilson <timwilson139@u.boisestate.edu>"]
+authors = ["Tim Wilson <timwilson139@u.boisestate.edu>",
+            "Michael Spagnolo <radioactivelad@aol.com>",
+            "Tyler Nicholls <lautermortis@games.net>"]
 
 [[bin]]
 name = "the_nebula"

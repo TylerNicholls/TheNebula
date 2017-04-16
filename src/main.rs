@@ -4,6 +4,7 @@ extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate rand;
 extern crate time;
+extern crate find_folder;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -12,7 +13,7 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use std::f64;
 //use rand::Rng;
-use rand::distributions::{IndependentSample, Range};
+//use rand::distributions::{IndependentSample, Range};
 //use std::num::Int;
 
 const GREEN:    [f32; 4] = [0.0, 1.0, 0.0, 1.0];
@@ -80,6 +81,14 @@ pub struct Lives {
     radius: f64,
     x_pos: f64,
     y_pos: f64,
+}
+
+pub struct Screen {
+    gl: GlGraphics, // OpenGL drawing backend.
+    //x_pos: f64,
+    //y_pos: f64,
+    exists: bool,
+    message: &'static str,
 }
 
 
@@ -238,8 +247,26 @@ impl Nebula {
                                         .trans(x_pos, y_pos);
 
                ellipse(PURPLE, shape1, transform, gl);
-        });
+
+
+
+
+            //    let assets = find_folder::Search::ParentsThenKids(3, 3)
+            //    .for_folder("assets").unwrap();
+            //    let ref font = assets.join("FiraSans-Regular.otf");
+            //    let factory = window.factory.clone();
+            //    let mut glyphs = Glyphs::new(font, factory).unwrap();
+            //    let greeting = "Hello there.";
+            //    text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32).draw(
+            //        //hostname_str,
+            //        greeting,
+            //        &mut glyphs,
+            //        &c.draw_state,
+            //        transform, gl
+        }
+    );
       }
+  //}
   }
 
 //implementation of the Lives struct
@@ -294,6 +321,73 @@ impl Lives {
     }
 
 
+    impl Screen {
+        fn render(&mut self, args: &RenderArgs) {
+            use graphics::*;
+
+            //let radius = self.radius;
+            //let the_text = text::colored(RED, 22.0);
+            //let the_text = text::colored(color::RED, font_size::22);
+            //let x_pos = self.x_pos; //TW
+            //let y_pos = self.y_pos; //TW
+
+            // let assets = find_folder::Search::ParentsThenKids(3, 3)
+            //     .for_folder("assets").unwrap();
+            //     let ref font = assets.join("FiraSans-Regular.ttf");
+                //let factory = self.gl.factory.clone();
+                //let mut glyphs = graphics::Glyphs::new(font, factory).unwrap();
+
+
+            let mut the_text = graphics::Text{
+                color: RED,
+                font_size: 22,
+                round: false,
+            };
+
+            // pub trait CharacterCache {
+            //     type Texture: ImageSize;
+            //     fn character(&mut self, font_size: FontSize, ch: char) -> &Character<Self::Texture>;
+            //     fn width(&mut self, size: FontSize, text: &str) -> Scalar { ... }
+            // }
+            let message = self.message;
+
+
+
+
+
+            let (x, y) = ((WINDOW_X / 2) as f64,
+                          (WINDOW_Y / 2) as f64);
+
+            self.gl.draw(args.viewport(), |c, gl| {
+                // Clear the screen.
+
+                let mut the_char_cache = character::CharacterCache::character(&mut self, 22u32  ,'y');
+                  let transform = c.transform.trans(x, y) //move reference to center of shape
+                                            //.trans(-radius, -radius)
+                                            .trans(0.0, 0.0);
+
+                   //ellipse(RED, shape1, transform, gl);
+
+                  // let transform = c.transform.trans(10.0, 100.0);
+            // Set a white background
+            //clear([1.0, 1.0, 1.0, 1.0], g);
+            clear(GREY, gl);
+            //draw<C, G>(&self, text: &str, cache: &mut C, draw_state: &DrawState, transform: Matrix2d, g: &mut G)
+            text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32).draw(
+                self.message,
+                &mut the_char_cache,//&mut glyphs, //cache: &mut C
+                &c.draw_state,
+                transform, gl
+            );
+        });
+
+
+
+            //});
+          }
+      }
+
+
 fn main() {
     let opengl = OpenGL::V3_2;
     let start_time = time::get_time().sec;
@@ -334,7 +428,7 @@ fn main() {
  let mut enemy = Enemy {
      gl: GlGraphics::new(opengl),
      radius: 37.5,
-     mass: 1.0,
+     mass: 2.0,
      x_pos: 90.0,
      y_pos: 90.0,
      x_vel: 0.0,
@@ -383,6 +477,12 @@ fn main() {
      exists: false
  };
 
+ let mut end_screen = Screen {
+     gl: GlGraphics::new(opengl),
+     exists: false,
+     message: "Game Over!! You Suck!!!",
+ };
+
 
  let mut can_shoot: bool = true;
  let mut is_start: bool = true;
@@ -393,7 +493,6 @@ fn main() {
     while let Some(e) = events.next(&mut window) {
 
         let current_time = time::get_time();
-
 
         println!("start_time: {}", current_time.sec );
         if (is_start || current_time.sec%3 == 0) && (can_shoot) {

@@ -15,15 +15,16 @@ it has some circles.
 they move.
 there are bullets
 
-### Need to implement
-* player lives icon
-* enemy damage icon
-* random locations of elements
-* scoring
-
 ### Implemented:
 * bullets
 * damage to Player
+* player lives icon
+* enemy damage icon
+
+### Need to implement
+* random locations of elements
+* scoring
+* Text on screen
 
 Helpful Code:
 [Piston-Tutorials](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started)

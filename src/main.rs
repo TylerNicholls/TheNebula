@@ -4,7 +4,7 @@ extern crate glutin_window;
 extern crate opengl_graphics;
 extern crate rand;
 extern crate time;
-extern crate find_folder;
+use std::env;
 
 use piston::window::WindowSettings;
 use piston::event_loop::*;
@@ -13,7 +13,7 @@ use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
 use std::f64;
 //use rand::Rng;
-//use rand::distributions::{IndependentSample, Range};
+use rand::distributions::{IndependentSample, Range};
 //use std::num::Int;
 
 const GREEN:    [f32; 4] = [0.0, 1.0, 0.0, 1.0];
@@ -42,6 +42,8 @@ pub struct Player {
     x_vel: f64,
     y_vel: f64,
     up_d: bool, down_d: bool, left_d: bool, right_d: bool,
+    score: i64,
+    difficulty: i32,
     lives: i32
 }
 
@@ -83,15 +85,27 @@ pub struct Lives {
     y_pos: f64,
 }
 
-pub struct Screen {
+pub struct Win_Screen {
     gl: GlGraphics, // OpenGL drawing backend.
-    //x_pos: f64,
-    //y_pos: f64,
-    exists: bool,
-    message: &'static str,
+    radius: f64,
+    x_pos: f64,
+    y_pos: f64,
 }
 
+pub struct Lose_Screen {
+    gl: GlGraphics, // OpenGL drawing backend.
+    radius: f64,
+    x_pos: f64,
+    y_pos: f64,
+}
 
+pub struct Power {
+    gl: GlGraphics, // OpenGL drawing backend.
+    height: f64,
+    width: f64,
+    x_pos: f64,
+    y_pos: f64,
+}
 
 //implementation of the Player struct
 impl Player {
@@ -115,7 +129,7 @@ impl Player {
         });
     }
     fn update(&mut self, args: &UpdateArgs) {
-        let vel_bump: f64  = 20.0;
+        let vel_bump: f64  = 10.0 * self.difficulty as f64;
         if self.up_d {
             self.y_vel += -vel_bump;
             self.up_d = false;
@@ -247,26 +261,8 @@ impl Nebula {
                                         .trans(x_pos, y_pos);
 
                ellipse(PURPLE, shape1, transform, gl);
-
-
-
-
-            //    let assets = find_folder::Search::ParentsThenKids(3, 3)
-            //    .for_folder("assets").unwrap();
-            //    let ref font = assets.join("FiraSans-Regular.otf");
-            //    let factory = window.factory.clone();
-            //    let mut glyphs = Glyphs::new(font, factory).unwrap();
-            //    let greeting = "Hello there.";
-            //    text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32).draw(
-            //        //hostname_str,
-            //        greeting,
-            //        &mut glyphs,
-            //        &c.draw_state,
-            //        transform, gl
-        }
-    );
+        });
       }
-  //}
   }
 
 //implementation of the Lives struct
@@ -293,8 +289,79 @@ impl Lives {
     }
 }
 
+impl Power {
+    fn render (&mut self, args: &RenderArgs) {
+        use graphics::*;
 
+        let height = self.height;
+        let width = self.width;
+        let init_width = self.width;
+        let shape1 = rectangle::rectangle_by_corners(0.0, 0.0, self.width, self.height);
+        let x_pos = self.x_pos;
+        let y_pos = self.y_pos;
 
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+
+            let transform = c.transform.trans(x, y) //move reference to center of shape
+                .trans(x_pos, y_pos);
+
+            rectangle(YELLOW, shape1, transform, gl);
+        });
+    }
+}
+
+impl Win_Screen {
+    fn render(&mut self, args: &RenderArgs) {
+        use graphics::*;
+
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+        let x_pos = self.x_pos; //TW
+        let y_pos = self.y_pos; //TW
+
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+            // Clear the screen.
+            clear(GREEN, gl);
+
+            let transform = c.transform.trans(x, y) //move reference to center of shape
+                .trans(-radius, -radius)
+                .trans(x_pos, y_pos);
+
+            ellipse(PURPLE, shape1, transform, gl);
+        });
+    }
+}
+
+impl Lose_Screen {
+    fn render(&mut self, args: &RenderArgs) {
+        use graphics::*;
+
+        let radius = self.radius;
+        let shape1 = rectangle::square(0.0, 0.0, 2.0*self.radius);
+        let x_pos = self.x_pos; //TW
+        let y_pos = self.y_pos; //TW
+
+        let (x, y) = ((WINDOW_X / 2) as f64,
+                      (WINDOW_Y / 2) as f64);
+
+        self.gl.draw(args.viewport(), |c, gl| {
+            // Clear the screen.
+            clear(YELLOW, gl);
+
+            let transform = c.transform.trans(x, y) //move reference to center of shape
+                .trans(-radius, -radius)
+                .trans(x_pos, y_pos);
+
+            ellipse(PURPLE, shape1, transform, gl);
+        });
+    }
+}
   impl Bullet {
       fn render(&mut self, args: &RenderArgs) {
           use graphics::*;
@@ -321,75 +388,17 @@ impl Lives {
     }
 
 
-    impl Screen {
-        fn render(&mut self, args: &RenderArgs) {
-            use graphics::*;
-
-            //let radius = self.radius;
-            //let the_text = text::colored(RED, 22.0);
-            //let the_text = text::colored(color::RED, font_size::22);
-            //let x_pos = self.x_pos; //TW
-            //let y_pos = self.y_pos; //TW
-
-            // let assets = find_folder::Search::ParentsThenKids(3, 3)
-            //     .for_folder("assets").unwrap();
-            //     let ref font = assets.join("FiraSans-Regular.ttf");
-                //let factory = self.gl.factory.clone();
-                //let mut glyphs = graphics::Glyphs::new(font, factory).unwrap();
-
-
-            let mut the_text = graphics::Text{
-                color: RED,
-                font_size: 22,
-                round: false,
-            };
-
-            // pub trait CharacterCache {
-            //     type Texture: ImageSize;
-            //     fn character(&mut self, font_size: FontSize, ch: char) -> &Character<Self::Texture>;
-            //     fn width(&mut self, size: FontSize, text: &str) -> Scalar { ... }
-            // }
-            let message = self.message;
-
-
-
-
-
-            let (x, y) = ((WINDOW_X / 2) as f64,
-                          (WINDOW_Y / 2) as f64);
-
-            self.gl.draw(args.viewport(), |c, gl| {
-                // Clear the screen.
-
-                let mut the_char_cache = character::CharacterCache::character(&mut self, 22u32  ,'y');
-                  let transform = c.transform.trans(x, y) //move reference to center of shape
-                                            //.trans(-radius, -radius)
-                                            .trans(0.0, 0.0);
-
-                   //ellipse(RED, shape1, transform, gl);
-
-                  // let transform = c.transform.trans(10.0, 100.0);
-            // Set a white background
-            //clear([1.0, 1.0, 1.0, 1.0], g);
-            clear(GREY, gl);
-            //draw<C, G>(&self, text: &str, cache: &mut C, draw_state: &DrawState, transform: Matrix2d, g: &mut G)
-            text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32).draw(
-                self.message,
-                &mut the_char_cache,//&mut glyphs, //cache: &mut C
-                &c.draw_state,
-                transform, gl
-            );
-        });
-
-
-
-            //});
-          }
-      }
-
-
 fn main() {
     let opengl = OpenGL::V3_2;
+    let mut difficulty: i32 = 1;
+
+    let args: Vec<_> = env::args().collect();
+
+    if args.len() > 1  {
+        println!("The first argument is {}", args[1]);
+        difficulty = args[1].parse::<i32>().unwrap();
+    }
+
     let start_time = time::get_time().sec;
     let mut window: Window = WindowSettings::new(
         "The Nebula!!",
@@ -422,13 +431,15 @@ fn main() {
      down_d: false,
      left_d: false,
      right_d: false,
+      score: 0,
+      difficulty: difficulty,
      lives: 3
  };
 
  let mut enemy = Enemy {
      gl: GlGraphics::new(opengl),
      radius: 37.5,
-     mass: 2.0,
+     mass: 1.0,
      x_pos: 90.0,
      y_pos: 90.0,
      x_vel: 0.0,
@@ -467,7 +478,29 @@ fn main() {
         y_pos: -270.0
     };
 
- let mut bullet = Bullet {
+  let mut power = Power {
+      gl: GlGraphics::new(opengl),
+      height: 20.0,
+      width: 100.0,
+      x_pos: 280.0,
+      y_pos: -280.0
+  };
+
+    let mut win_screen = Win_Screen {
+        gl: GlGraphics::new(opengl),
+        radius: 75.0,
+        x_pos: -90.0,
+        y_pos: -90.0
+    };
+
+    let mut lose_screen = Lose_Screen {
+        gl: GlGraphics::new(opengl),
+        radius: 75.0,
+        x_pos: -90.0,
+        y_pos: -90.0
+    };
+
+    let mut bullet = Bullet {
      gl: GlGraphics::new(opengl),
      radius: 5.0,
      x_pos: enemy.x_pos,
@@ -475,12 +508,6 @@ fn main() {
      x_vel: 50.0,
      y_vel: 50.0,
      exists: false
- };
-
- let mut end_screen = Screen {
-     gl: GlGraphics::new(opengl),
-     exists: false,
-     message: "Game Over!! You Suck!!!",
  };
 
 
@@ -494,7 +521,8 @@ fn main() {
 
         let current_time = time::get_time();
 
-        println!("start_time: {}", current_time.sec );
+
+       // println!("start_time: {}", current_time.sec );
         if (is_start || current_time.sec%3 == 0) && (can_shoot) {
             println!("Shoot! start_time: {}", current_time.sec );
             can_shoot = false;
@@ -518,12 +546,26 @@ fn main() {
                 }
             }
 
+            if enemy.health > 0.0 {
+                power.width = enemy.health;
+                power.render(&r);
+            }
+
+            if player.lives < 1 {
+                lose_screen.render(&r);
+//                lose(&mut player, start_time);
+            }
+
+            if enemy.health <= 0.0 {
+                win_screen.render(&r);
+            }
+
          }
 
 
         if let Some(u) = e.update_args() {
             let mut wait: i64 = 0;
-            if wait - time::get_time().sec < 0{
+            if wait - time::get_time().sec < 0 {
                 wait = 0;
             }
             player.update(&u);
@@ -533,9 +575,11 @@ fn main() {
                 rebound(&mut player, &mut enemy);
                 //println!("collide");
             }
-            damage_enemy(&mut enemy, &mut nebula);
+            if enemy.health > 0.0 {
+            damage_enemy(&mut enemy, &mut nebula, &mut player, &mut bullet, start_time, &difficulty);
+            }
             if bullet.exists && wait == 0 {
-                update_bullet(&mut bullet, &mut enemy);
+                update_bullet(&mut bullet, &mut enemy, difficulty);
             }else {
                 reset_bullet(&mut bullet, &mut enemy);
             }
@@ -543,13 +587,9 @@ fn main() {
             if bullet_collision(&mut bullet, &mut player, &mut enemy) {
                 println!("hit!! Lives: {}",player.lives);
                 wait = time::get_time().sec;
-                if player.lives <= 0 {
-                    println!("Player is Dead.");
-                    let score: i64 = (1000 - (start_time - time::get_time().sec)) *1000;
-                    println!("score {:.2}", score);
-
-                    //TODO: implement player dead
-                }
+//                if player.lives <= 0 {
+//                    lose(&mut player, start_time);
+//                }
             }
         }
 
@@ -585,7 +625,7 @@ fn reset_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     the_enemy.bullet_theta = the_enemy.theta;
 }
 
-fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
+fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy, difficulty: i32){
     if the_bullet.x_pos <= (-((WINDOW_X/2) as f64)+the_bullet.radius) {
         reset_bullet(the_bullet, the_enemy);
 
@@ -600,18 +640,43 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy){
     }
 
 
-    let bullet_speed: f64 = 5.0;
+    let bullet_speed: f64 = 1.0 * difficulty as f64;
     the_bullet.x_vel = bullet_speed * the_enemy.bullet_theta.cos();
     the_bullet.y_vel = bullet_speed * the_enemy.bullet_theta.sin();
     the_bullet.x_pos += the_bullet.x_vel;
     the_bullet.y_pos += the_bullet.y_vel;
 
 }
+fn win(the_player: &mut Player, start_time: i64){
+    println!("Enemy is Dead.");
+    let win_bonus: i64 = 100000;
+    the_player.score += (1000 - (start_time - time::get_time().sec)) *1000 + win_bonus;
+    println!("score {:.2}", the_player.score);
+
+    reset_frame(the_player);
+}
+
+fn lose(the_player: &mut Player, start_time: i64){
+    println!("Player is Dead.");
+    the_player.score += (1000 - (start_time - time::get_time().sec)) *1000;
+    println!("score {:.2}", the_player.score);
+
+    reset_frame(the_player);
+}
+
+fn reset_frame(the_player: &mut Player){
+        println!("start");
+    #[warn(while_true)]
+        while true {
+            //clear(GREY, the_player.gl);
+        }
+}
 
 
 //boundaries
 fn collision(the_player: &mut Player, the_enemy: &mut Enemy) -> bool {
     let mut retval: bool = false;
+    the_player.score += (((the_player.x_vel.powi(2) + the_player.y_vel.powi(2)).sqrt()) as i64) * 100 ;
     let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     //println!("centDist: {:.2}",cent_dist);
     if cent_dist <= (the_enemy.radius + the_player.radius) {
@@ -635,8 +700,8 @@ fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
         the_player.y_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
 }
 
-fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
-    let damage_factor: f64 = 2.0;
+fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula, the_player: &mut Player, the_bullet: &mut Bullet, start_time: i64, mut difficulty: &i32) {
+    let damage_factor: f64 = 20.0 / (*difficulty as f64/ 3.0) ;
     let cent_dist: f64 = ((the_nebula.x_pos-the_enemy.x_pos).powi(2) + (the_nebula.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     if cent_dist <= (the_enemy.radius + the_nebula.radius)  {
         if (cent_dist + the_enemy.radius) <= the_nebula.radius {    //completely in the nebula
@@ -648,6 +713,7 @@ fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula) {
             the_enemy.damage_rate = damage_factor * (first_part + second_part + third_part) / (PI*the_enemy.radius.powi(2));
         }
         println!("damage! Health = {:.2}",the_enemy.health);
+
     }
 }
 

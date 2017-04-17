@@ -553,14 +553,14 @@ fn main() {
 
             if player.lives < 1 {
                 lose_screen.render(&r);
-//                lose(&mut player, start_time);
+                //                lose(&mut player, start_time);
             }
 
             if enemy.health <= 0.0 {
                 win_screen.render(&r);
             }
 
-         }
+           }
 
 
         if let Some(u) = e.update_args() {

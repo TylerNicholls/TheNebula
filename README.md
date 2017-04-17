@@ -38,11 +38,14 @@ file, main.rs, is in a directory /src and there needs to be a Cargo
 configuration file, Cargo.toml. This project should already be organized
 correctly with the appropriate Cargo.toml file.
 
-### building and running
+### Building and Running
 To build (compile) and run the project, in the project's root directory, type:
 `
-$ cargo run
+$ cargo run <difficulty>
 `
+
+With difficulty being an optional integer command line argument increasing 
+the difficulty. If not entered, it defaults to difficulty level 1.
 
 The executable will be in /target/debug/ (named: the_nebula) To build
 without running, type:

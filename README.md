@@ -17,6 +17,8 @@ To install Rust, in a terminal, type:
 `
 $ curl https://sh.rustup.rs -sSf | sh
 `
+Further instructions for installing if necessary: 
+https://www.rust-lang.org/en-US/install.html
 
 Test your install by typing:
 `

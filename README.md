@@ -4,9 +4,9 @@
 * Michael Spagnolo
 * Tim Wilson
 
-Written in rust.
+Written in Rust.
 
-Try to knock the guy shooting bullets (enemy) into the nebula (purple circle).
+Try to knock the circle shooting bullets (enemy) into the nebula (purple circle).
 The nebula does damage to the enemy. If you get the enemy's health to zero,
 you win. If you get hit by three of the enemy's bullets, you lose.
 
@@ -22,7 +22,7 @@ Test your install by typing:
 `
 $ rustc --version
 `
-you should see a version number and some other information
+You should see a version number and some other information
 
 ### Cargo
 Cargo is Rust's build manager, similar to make. It also manages packages,
@@ -31,7 +31,7 @@ To make sure it is installed, type:
 `
 $ cargo --version
 `
-you should see a version number.
+You should see a version number.
 
 To use cargo, a Rust project should be organized such that the source
 file, main.rs, is in a directory /src and there needs to be a Cargo
@@ -59,6 +59,6 @@ $ cargo build --release
 `
 
 ### Helpful Code:
-We used this code to get us started. Sure wish there was more explanation, but
+We used this code as a jumping off point. Sure wish there was more explanation, but
 it got us started:
 [Piston-Tutorials](https://github.com/PistonDevelopers/Piston-Tutorials/tree/master/getting-started)

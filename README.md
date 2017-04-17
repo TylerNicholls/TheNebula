@@ -39,7 +39,7 @@ configuration file, Cargo.toml. This project should already be organized
 correctly with the appropriate Cargo.toml file.
 
 ### building and running
-to build (compile) and run the project, in the project's root directory, type:
+To build (compile) and run the project, in the project's root directory, type:
 `
 $ cargo run
 `
@@ -51,7 +51,7 @@ $ cargo build
 `
 
 To compile the code to a more optimized, release version of the executable,
-you can recompile with the --release flag. This takes much longer to compile,
+you can compile with the --release flag. This takes much longer to compile,
 but results in a faster executable that is part of the attraction of
 Rust. To do this, type:
 `

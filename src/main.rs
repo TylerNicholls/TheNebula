@@ -697,6 +697,23 @@ fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
 
         the_player.x_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).cos())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).cos();
         the_player.y_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
+
+        let enemy_net_vel_final: f64  = ( the_enemy.x_vel.powi(2)  + the_enemy.y_vel.powi(2)  ).sqrt();
+        let player_net_vel_final: f64 = ( the_player.x_vel.powi(2) + the_player.y_vel.powi(2) ).sqrt();
+
+        let cent_dist: f64 = ((the_player.x_pos-the_enemy.x_pos).powi(2) + (the_player.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
+        if cent_dist < (the_enemy.radius + the_player.radius)  {
+            //move the player outside the enemy
+            let enemy_overlap: f64 = (the_enemy.radius + the_player.radius - cent_dist) * (the_enemy.radius/ (the_enemy.radius + the_player.radius)) ;
+            let player_overlap: f64 = (the_enemy.radius + the_player.radius - cent_dist) * (the_player.radius/ (the_enemy.radius + the_player.radius)) ;
+
+            the_enemy.x_pos = the_enemy.x_pos + enemy_overlap*phi.cos(); //TODO: Fix this
+            the_enemy.y_pos = the_enemy.y_pos + enemy_overlap*phi.sin();
+
+            the_player.x_pos = the_player.x_pos - player_overlap*phi.cos(); //TODO: Fix this
+            the_player.y_pos = the_player.y_pos - player_overlap*phi.sin();
+        }
+
 }
 
 fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula, the_player: &mut Player, the_bullet: &mut Bullet, start_time: i64, mut difficulty: &i32) {

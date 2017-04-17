@@ -517,6 +517,7 @@ fn main() {
 
 //the event loop
  let mut events = Events::new(EventSettings::new());
+    let mut first_time = true;
     while let Some(e) = events.next(&mut window) {
 
         let current_time = time::get_time();
@@ -551,13 +552,30 @@ fn main() {
                 power.render(&r);
             }
 
+            if player.lives < 1 && first_time{
+                println!("Player is Dead.");
+                player.score += (1000 - (start_time - time::get_time().sec)) *1000;
+                println!("score {:.2}", player.score);
+                first_time = false;
+            }
+
             if player.lives < 1 {
                 lose_screen.render(&r);
+
+            }
+            if enemy.health <= 0.0 && first_time{
+                println!("Enemy is Dead.");
+                let win_bonus: i64 = 100000;
+                player.score += (1000 - (start_time - time::get_time().sec)) *1000 + win_bonus;
+                println!("score {:.2}", player.score);
+                first_time = false;
             }
 
             if enemy.health <= 0.0 {
                 win_screen.render(&r);
             }
+
+
 
            }
 
@@ -575,7 +593,7 @@ fn main() {
                 //println!("collide");
             }
             if enemy.health > 0.0 {
-            damage_enemy(&mut enemy, &mut nebula, &mut player, &mut bullet, start_time, &difficulty);
+            damage_enemy(&mut enemy, &mut nebula, &difficulty);
             }
             if bullet.exists && wait == 0 {
                 update_bullet(&mut bullet, &mut enemy, difficulty);
@@ -646,30 +664,7 @@ fn update_bullet(the_bullet: &mut Bullet, the_enemy: &mut Enemy, difficulty: i32
     the_bullet.y_pos += the_bullet.y_vel;
 
 }
-fn win(the_player: &mut Player, start_time: i64){
-    println!("Enemy is Dead.");
-    let win_bonus: i64 = 100000;
-    the_player.score += (1000 - (start_time - time::get_time().sec)) *1000 + win_bonus;
-    println!("score {:.2}", the_player.score);
 
-    reset_frame(the_player);
-}
-
-fn lose(the_player: &mut Player, start_time: i64){
-    println!("Player is Dead.");
-    the_player.score += (1000 - (start_time - time::get_time().sec)) *1000;
-    println!("score {:.2}", the_player.score);
-
-    reset_frame(the_player);
-}
-
-fn reset_frame(the_player: &mut Player){
-        println!("start");
-    #[warn(while_true)]
-        while true {
-            //clear(GREY, the_player.gl);
-        }
-}
 
 
 //boundaries
@@ -699,7 +694,7 @@ fn rebound(the_player: &mut Player, the_enemy: &mut Enemy) {
         the_player.y_vel = (player_net_vel * (player_theta - phi).cos() * (the_player.mass - the_enemy.mass) + 2.0* the_enemy.mass*enemy_net_vel*(enemy_theta - phi).cos()  *   (phi).sin())/(the_player.mass + the_enemy.mass) + player_net_vel * (player_theta - phi).sin() * (phi + PI/2.0).sin();
 }
 
-fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula, the_player: &mut Player, the_bullet: &mut Bullet, start_time: i64, mut difficulty: &i32) {
+fn damage_enemy(the_enemy: &mut Enemy, the_nebula: &mut Nebula, difficulty: &i32) {
     let damage_factor: f64 = 20.0 / (*difficulty as f64/ 3.0) ;
     let cent_dist: f64 = ((the_nebula.x_pos-the_enemy.x_pos).powi(2) + (the_nebula.y_pos-the_enemy.y_pos).powi(2) ).sqrt();
     if cent_dist <= (the_enemy.radius + the_nebula.radius)  {
